@@ -63,6 +63,13 @@ STRUCTURED_SCHEMA: dict[str, dict[str, str]] = {
     "countries": {"country_id": "str", "name": "text", "region_id": "str"},
     "regions": {"region_id": "str", "name": "text"},
     "trials_compounds": {"trial_id": "str", "compound_id": "str"},
+    "site_metrics_region_monthly": {
+        "region_id": "str", "month": "str",
+        "total_patients_enrolled": "int", "total_operational_cost": "int",
+    },
+    "investigator_capacity_region_monthly": {
+        "region_id": "str", "month": "str", "avg_capacity_index": "float",
+    },
 }
 
 _COLUMN_TYPES: dict[str, Any] = {"str": _STR, "text": _TXT, "int": Integer, "float": Float}
@@ -72,7 +79,7 @@ _metadata: MetaData | None = None
 
 def structured_metadata() -> MetaData:
     """SQLAlchemy metadata for the structured schema (cached)."""
-    global _metadata
+    global _metadata  # noqa: PLW0603 - deliberate module-level cache
     if _metadata is None:
         md = MetaData()
         for table, columns in STRUCTURED_SCHEMA.items():
@@ -121,6 +128,9 @@ def compile_query_spec(spec: QuerySpec) -> Select:
                     table.c[agg.column])
                 expr.append(col_expr.label(label))
             else:
+                # sqlguard rejects non-count aggregations without a column.
+                if agg.column is None:
+                    raise ValueError(f"aggregation {agg.func} requires a column")
                 expr.append(getattr(func, agg.func)(table.c[agg.column])
                             .label(f"{agg.func}_{agg.column}"))
     else:

@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
+from collections.abc import Iterator
 from pathlib import Path
-from typing import Iterator
 
 import pytest
 from sqlalchemy import Engine
@@ -33,8 +33,8 @@ def engine(tmp_path: Path) -> Iterator[Engine]:
 @pytest.fixture()
 def seeded_engine(engine, tmp_path: Path) -> Engine:
     """Engine with the synthetic dataset's structured tables populated."""
-    from nexusgraph.synth import build_corpus
     from nexusgraph.store.structured import insert_rows
+    from nexusgraph.synth import build_corpus
 
     corpus = build_corpus()
     for table in STRUCTURED_SCHEMA:

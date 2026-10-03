@@ -76,7 +76,10 @@ src = ["src", "evals", "tests"]
 
 [tool.ruff.lint]
 select = ["E", "F", "W", "I", "B", "UP", "SIM", "C4", "RET", "PL"]
-ignore = ["PLR0913", "PLR2004", "PLR0912", "PLR0915", "PLR0911", "RET504"]
+# PLC0415 (imports at top-level) is off deliberately: the codebase uses lazy
+# imports for optional backends (OTel, Redis, MCP, LLM HTTP client) and to
+# break circular dependencies between the agent/store layers.
+ignore = ["PLC0415", "PLR0913", "PLR2004", "PLR0912", "PLR0915", "PLR0911", "RET504"]
 
 [tool.ruff.lint.per-file-ignores]
 "tests/*" = ["PLR", "B008", "SIM117"]
@@ -92,6 +95,7 @@ warn_redundant_casts = true
 warn_unused_ignores = true
 check_untyped_defs = true
 plugins = ["pydantic.mypy"]
+mypy_path = "src"
 exclude = ["build", "dist", "data"]
 
 [[tool.mypy.overrides]]

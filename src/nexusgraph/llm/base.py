@@ -46,8 +46,11 @@ def estimate_cost(settings: LLMSettings, prompt_tokens: int,
 
 
 class LLMClient(Protocol):
-    provider: str
-    model: str
+    @property
+    def provider(self) -> str: ...
+
+    @property
+    def model(self) -> str: ...
 
     def complete(self, request: CompletionRequest) -> CompletionResponse: ...
 

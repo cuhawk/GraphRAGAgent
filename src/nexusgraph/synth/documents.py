@@ -8,6 +8,7 @@ suite; they are clearly marked in ``documents_index.json``.
 from __future__ import annotations
 
 import json
+import pathlib
 
 from nexusgraph.synth.generator import GeneratedDocument
 
@@ -208,7 +209,7 @@ monitoring cycle.
                   "trial:T-2003"],
         text=(
             "month,site_id,trial_id,note\n"
-            "2024-09,S-1001,T-2001,Enrolment down for third consecutive month; staffing gap persists\n"
+            "2024-09,S-1001,T-2001,Enrolment down third month; staffing gap persists\n"
             "2024-10,S-1001,T-2001,Storage unit alarm tested; cost variance flagged by finance\n"
             "2025-01,S-1001,T-2001,Calibration drift on endpoint device; vendor visit scheduled\n"
             "2024-11,S-1002,T-2001,Enrolment ahead of plan; no operational findings\n"
@@ -402,7 +403,7 @@ remediation plan is due next month.
     return docs
 
 
-def render_pdf(text: str, path) -> None:  # noqa: ANN001 - Path
+def render_pdf(text: str, path: pathlib.Path) -> None:
     from fpdf import FPDF
 
     pdf = FPDF()

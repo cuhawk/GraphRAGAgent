@@ -80,6 +80,14 @@ class DocumentStore:
         by_id = {r.id: self._chunk_from_row(r) for r in rows}
         return [by_id[cid] for cid in chunk_ids if cid in by_id]
 
+    def chunks_for_document(self, document_id: str) -> list[Chunk]:
+        with Session(self._engine) as session:
+            rows = session.execute(
+                select(ChunkRow).where(ChunkRow.document_id == document_id)
+                .order_by(ChunkRow.ordinal)
+            ).scalars().all()
+        return [self._chunk_from_row(r) for r in rows]
+
     def chunk_count(self) -> int:
         with Session(self._engine) as session:
             return int(session.scalar(select(func.count()).select_from(ChunkRow)) or 0)

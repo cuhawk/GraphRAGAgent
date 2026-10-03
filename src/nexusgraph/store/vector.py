@@ -108,9 +108,8 @@ class LocalVectorIndex:
             return False
         if filters.content_types and content_type not in filters.content_types:
             return False
-        if filters.entity_ids and not (set(entity_ids) & set(filters.entity_ids)):
-            return False
-        return True
+        return not (filters.entity_ids
+                    and not (set(entity_ids) & set(filters.entity_ids)))
 
 
 class PgVectorIndex:

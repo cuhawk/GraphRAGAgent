@@ -28,7 +28,7 @@ class JsonFormatter(logging.Formatter):
 
 
 def configure_logging(level: str = "INFO", json_mode: bool = False) -> None:
-    global _CONFIGURED
+    global _CONFIGURED  # noqa: PLW0603 - deliberate one-shot module-level guard
     if _CONFIGURED:
         return
     handler = logging.StreamHandler(sys.stderr)

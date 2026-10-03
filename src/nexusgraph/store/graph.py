@@ -18,7 +18,7 @@ from nexusgraph.domain.ids import ONTOLOGY_BASE, document_graph_uri, document_ur
 from nexusgraph.domain.models import SparqlResult
 from nexusgraph.observability.logging import get_logger
 from nexusgraph.security.sparqlguard import validate_sparql
-from nexusgraph.utils import ToolTimeoutError, run_with_timeout
+from nexusgraph.utils import ToolTimeoutError, ToolValidationError, run_with_timeout
 
 logger = get_logger("store.graph")
 
@@ -107,6 +107,10 @@ class GraphStore:
             result = self._store.query(clean, **kwargs)  # type: ignore[arg-type]
             if isinstance(result, ox.QueryBoolean):
                 return bool(result)
+            if not isinstance(result, ox.QuerySolutions):
+                # SELECT/ASK are the only forms the guard admits; QueryTriples
+                # (CONSTRUCT/DESCRIBE) can therefore never reach this branch.
+                raise ToolValidationError("unsupported query result form")
             variables = [v.value for v in result.variables]
             rows: list[dict[str, str]] = []
             truncated = False

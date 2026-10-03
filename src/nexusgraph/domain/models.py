@@ -18,7 +18,7 @@ from pydantic import BaseModel, ConfigDict, Field
 # --------------------------------------------------------------------------- #
 
 
-class SourceType(str, enum.Enum):
+class SourceType(enum.StrEnum):
     document = "document"
     sql = "sql"
     rdf = "rdf"
@@ -135,7 +135,7 @@ class QuerySpec(BaseModel):
     aggregations: list[Aggregation] = Field(default_factory=list)
     group_by: list[str] = Field(default_factory=list)
     order_by: list[OrderBy] = Field(default_factory=list)
-    limit: int = Field(default=50, ge=1, le=200)
+    limit: int = Field(default=200, ge=1, le=500)
 
 
 class StructuredQueryResult(BaseModel):

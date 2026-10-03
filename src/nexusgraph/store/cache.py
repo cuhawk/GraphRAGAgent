@@ -46,7 +46,8 @@ class RedisCache:
 
     def get(self, key: str) -> str | None:
         try:
-            return self._client.get(f"{self._prefix}{key}")
+            value = self._client.get(f"{self._prefix}{key}")
+            return value if isinstance(value, str) else None
         except Exception as exc:
             logger.warning("redis get failed: %s", exc)
             return None

@@ -1,7 +1,7 @@
 import pytest
 
-from nexusgraph.store.graph import GraphStore
 from nexusgraph.security.sparqlguard import SparqlGuardError
+from nexusgraph.store.graph import GraphStore
 
 PREFIX = "PREFIX ngx: <https://nexusgraph.dev/ontology#>\nPREFIX nxg: <https://nexusgraph.dev/data/>\n"
 

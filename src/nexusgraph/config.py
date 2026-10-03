@@ -49,7 +49,7 @@ class LimitsSettings(BaseModel):
     """Hard resource limits enforced by tools and guards (see docs/THREAT_MODEL.md)."""
 
     max_tool_calls_per_run: int = Field(default=12, ge=1)
-    max_rows: int = Field(default=200, ge=1)
+    max_rows: int = Field(default=500, ge=1)
     max_result_bytes: int = Field(default=64_000, ge=1)
     max_input_chars: int = Field(default=8_000, ge=1)
     max_chunk_chars: int = Field(default=800, ge=100)

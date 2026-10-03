@@ -20,6 +20,7 @@ from __future__ import annotations
 import csv
 import json
 import pathlib
+from collections.abc import Callable
 from dataclasses import dataclass, field
 
 from sqlalchemy import Engine
@@ -69,13 +70,14 @@ class IngestionReport:
 class IngestionPipeline:
     def __init__(
         self,
+        *,
         settings: Settings,
         engine: Engine,
         graph_store: GraphStore,
         entity_store: EntityStore,
         document_store: DocumentStore,
         embedder: Embedder,
-        extractor_factory,  # Callable[[EntityResolver], object with .extract(text)]
+        extractor_factory: Callable[[object], object],
     ) -> None:
         self._settings = settings
         self._engine = engine
@@ -131,7 +133,8 @@ class IngestionPipeline:
     # -------------------------------------------------------------- structured
     def _load_structured(self, tables_dir: pathlib.Path) -> int:
         """Load CSV tables; tables are cleared first so ingestion is idempotent."""
-        from sqlalchemy import MetaData as sa_MetaData, delete as sa_delete
+        from sqlalchemy import MetaData as sa_MetaData
+        from sqlalchemy import delete as sa_delete
 
         rows_loaded = 0
         if not tables_dir.exists():
@@ -139,15 +142,15 @@ class IngestionPipeline:
         md = sa_MetaData()
         md.reflect(bind=self._engine, only=list(STRUCTURED_SCHEMA))
         with self._engine.begin() as conn:
-            for table in md.sorted_tables:
-                conn.execute(sa_delete(table))
-        for table in sorted(STRUCTURED_SCHEMA):
-            path = tables_dir / f"{table}.csv"
+            for table_obj in md.sorted_tables:
+                conn.execute(sa_delete(table_obj))
+        for table_name in sorted(STRUCTURED_SCHEMA):
+            path = tables_dir / f"{table_name}.csv"
             if not path.exists():
                 continue
             with path.open(encoding="utf-8", newline="") as fh:
                 rows = list(csv.DictReader(fh))
-            rows_loaded += insert_rows(self._engine, table, rows)
+            rows_loaded += insert_rows(self._engine, table_name, rows)
         return rows_loaded
 
     # ---------------------------------------------------------------- entities
@@ -206,7 +209,7 @@ class IngestionPipeline:
             report.extraction_methods[doc_id] = result.method
 
             chunks = chunk_text(text, self._settings.limits.max_chunk_chars)
-            embeddings = self._embedder.embed_texts([c for c in chunks])
+            embeddings = self._embedder.embed_texts(chunks)
             chunk_models = [
                 Chunk(
                     id=f"{doc_id}#chunk-{ordinal:04d}",

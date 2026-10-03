@@ -139,7 +139,8 @@ TRIAL_SITES: dict[str, list[str]] = {
 
 # id, name, country_id, hospital_id, metric pattern
 SITES: list[tuple[str, str, str, str | None, str]] = [
-    ("S-1001", "Site A (Nordhaven University Hospital)", "CT-101", "H-6001", "declining_cost_rising"),
+    ("S-1001", "Site A (Nordhaven University Hospital)", "CT-101", "H-6001",
+     "declining_cost_rising"),
     ("S-1002", "Site B (Marrow Creek Medical Center)", "CT-103", "H-6002", "rising"),
     ("S-1003", "Sjoland Coastal Trial Unit", "CT-102", None, "strong_rising"),
     ("S-1004", "Luxford Phase Unit 4", "CT-104", "H-6006", "rising"),
@@ -359,8 +360,9 @@ def build_corpus(seed: int = 42) -> Corpus:
                                          f"Synthetic hospital {name} in country {cid}."))
         corpus.relationships.append((f"hospital:{hid}", f"country:{cid}", "HOSPITAL_LOCATED_IN"))
     for coid, name, hq in COMPANIES:
-        corpus.entities.append(EntityRec(f"company:{coid}", "company", name,
-                                         f"Synthetic pharmaceutical company headquartered in {hq}."))
+        corpus.entities.append(EntityRec(
+            f"company:{coid}", "company", name,
+            f"Synthetic pharmaceutical company headquartered in {hq}."))
     for cid, name, target in COMPOUNDS:
         corpus.entities.append(EntityRec(
             f"compound:{cid}", "compound", name,
@@ -375,7 +377,6 @@ def build_corpus(seed: int = 42) -> Corpus:
                                      "COMPOUND_RELATED_TO_PRODUCT"))
 
     # ---- trials / milestones / safety events ---------------------------
-    phase_individual = {"Phase I": "phase_1", "Phase II": "phase_2", "Phase III": "phase_3"}
     for tid, codename, phase, coid, status in TRIALS:
         start, end = TRIAL_DATES[tid]
         corpus.entities.append(EntityRec(
@@ -398,28 +399,29 @@ def build_corpus(seed: int = 42) -> Corpus:
             "milestone_id": mid, "trial_id": tid, "name": name,
             "due_date": due, "completed_date": completed,
         })
-    for eid, sid, tid, comp, severity, reported, desc in SAFETY_EVENTS:
+    for eid, sid, tid, comp_opt, severity, reported, desc in SAFETY_EVENTS:
         corpus.entities.append(EntityRec(
             f"safetyevent:{eid}", "safetyevent", eid,
             f"Operational safety event at {sid}: {desc} (severity {severity})."))
         corpus.relationships.append((f"trial:{tid}", f"safetyevent:{eid}",
                                      "TRIAL_REPORTS_SAFETY_EVENT"))
         corpus.relationships.append((f"safetyevent:{eid}", f"site:{sid}", "SAFETY_EVENT_AT_SITE"))
-        if comp:
-            corpus.relationships.append((f"safetyevent:{eid}", f"compound:{comp}",
+        if comp_opt:
+            corpus.relationships.append((f"safetyevent:{eid}", f"compound:{comp_opt}",
                                          "SAFETY_EVENT_INVOLVES_COMPOUND"))
         corpus.tables.setdefault("safety_events", []).append({
-            "event_id": eid, "site_id": sid, "trial_id": tid, "compound_id": comp or "",
+            "event_id": eid, "site_id": sid, "trial_id": tid,
+            "compound_id": comp_opt or "",
             "severity": severity, "reported_at": reported, "description": desc,
         })
 
     # ---- sites ----------------------------------------------------------
-    for sid, name, cid, hid, _pattern in SITES:
+    for sid, name, cid, host, _pattern in SITES:
         corpus.entities.append(EntityRec(
             f"site:{sid}", "site", name,
             f"Synthetic trial site in {cid}"
-            + (f", hosted by {hid}" if hid else "") + "."))
-        if hid:
+            + (f", hosted by {host}" if host else "") + "."))
+        if host:
             corpus.relationships.append((f"site:{sid}", f"hospital:{hid}", "SITE_LOCATED_IN"))
         else:
             corpus.relationships.append((f"site:{sid}", f"country:{cid}", "SITE_LOCATED_IN"))
@@ -481,6 +483,40 @@ def build_corpus(seed: int = 42) -> Corpus:
                                                      + rng.uniform(-0.02, 0.02))), 3),
             })
     corpus.tables["investigator_capacity_monthly"] = cap_rows
+
+    # ---- region analytics marts (pre-joined for the single-table SQL tool)
+    country_of_site = {s[0]: s[2] for s in SITES}
+    region_of_country = {c[0]: c[2] for c in COUNTRIES}
+
+    def region_of_site(site_id: str) -> str:
+        return region_of_country[country_of_site[site_id]]
+
+    region_metrics: dict[tuple[str, str], list[int]] = {}
+    for row in site_rows:
+        key = (region_of_site(str(row["site_id"])), str(row["month"]))
+        totals = region_metrics.setdefault(key, [0, 0])
+        totals[0] += int(str(row["patients_enrolled"]))
+        totals[1] += int(str(row["operational_cost"]))
+    corpus.tables["site_metrics_region_monthly"] = [
+        {"region_id": region, "month": month, "total_patients_enrolled": totals[0],
+         "total_operational_cost": totals[1]}
+        for (region, month), totals in sorted(region_metrics.items())
+    ]
+
+    inv_region: dict[str, str] = {}
+    for inv in investigator_rows:
+        inv_region[str(inv["investigator_id"])] = region_of_site(str(inv["site_id"]))
+    region_capacity: dict[tuple[str, str], list[float]] = {}
+    for row in cap_rows:
+        key = (inv_region[str(row["investigator_id"])], str(row["month"]))
+        acc = region_capacity.setdefault(key, [0.0, 0])
+        acc[0] += float(str(row["capacity_index"]))
+        acc[1] += 1
+    corpus.tables["investigator_capacity_region_monthly"] = [
+        {"region_id": region, "month": month,
+         "avg_capacity_index": round(acc[0] / acc[1], 4)}
+        for (region, month), acc in sorted(region_capacity.items())
+    ]
 
     # ---- aliases (used by extraction + name resolution) -------------------
     for e in corpus.entities:

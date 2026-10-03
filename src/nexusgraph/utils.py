@@ -2,15 +2,21 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from concurrent.futures import ThreadPoolExecutor
 from concurrent.futures import TimeoutError as FuturesTimeoutError
+from typing import Any
 
 
 class ToolTimeoutError(RuntimeError):
     """A tool execution exceeded its wall-clock budget."""
 
 
-def run_with_timeout(fn, timeout_s: float):  # noqa: ANN001 - generic callable
+class ToolValidationError(RuntimeError):
+    """A query/result form is not supported by the guarded path."""
+
+
+def run_with_timeout(fn: Callable[[], Any], timeout_s: float) -> Any:
     """Run ``fn`` in a worker thread and bound the wall-clock wait.
 
     If the worker overruns, the caller gets :class:`ToolTimeoutError` and the

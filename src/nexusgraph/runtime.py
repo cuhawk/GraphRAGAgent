@@ -7,13 +7,16 @@ the components are identical.
 from __future__ import annotations
 
 import pathlib
+from collections.abc import Callable
 from dataclasses import dataclass
 
-from nexusgraph.config import Settings
+from sqlalchemy import Engine
+
+from nexusgraph.config import LimitsSettings, Settings
 from nexusgraph.db.engine import create_engine_for, init_schema
 from nexusgraph.ingestion.pipeline import IngestionPipeline, IngestionReport
 from nexusgraph.observability.logging import get_logger
-from nexusgraph.observability.tracing import TraceSink, Tracer
+from nexusgraph.observability.tracing import Tracer, TraceSink
 from nexusgraph.retrieval.embeddings import Embedder, make_embedder
 from nexusgraph.retrieval.service import RetrievalService
 from nexusgraph.store.cache import make_cache
@@ -33,7 +36,7 @@ DEFAULT_SEED = 42
 @dataclass
 class Runtime:
     settings: Settings
-    engine: object
+    engine: Engine
     graph: GraphStore
     entities: EntityStore
     documents: DocumentStore
@@ -47,7 +50,7 @@ class Runtime:
     dataset_dir: pathlib.Path
 
     @property
-    def limits(self):
+    def limits(self) -> LimitsSettings:
         return self.settings.limits
 
     def is_bootstrapped(self) -> bool:
@@ -89,12 +92,13 @@ def build_runtime(settings: Settings) -> Runtime:
     )
 
 
-def make_extractor(runtime: Runtime):
+def make_extractor(runtime: Runtime) -> Callable[..., object]:
     """Extraction factory honouring the configured LLM provider."""
     if runtime.settings.llm.provider == "openai-compatible":
         from nexusgraph.ingestion.extraction import LLMAssistedExtractor
+        from nexusgraph.ingestion.resolution import EntityResolver
 
-        def factory_llm(resolver):
+        def factory_llm(resolver: EntityResolver) -> LLMAssistedExtractor:
             from nexusgraph.llm.base import make_llm_client
 
             return LLMAssistedExtractor(make_llm_client(runtime.settings.llm),

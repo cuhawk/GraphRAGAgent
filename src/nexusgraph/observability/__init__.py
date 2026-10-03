@@ -4,10 +4,10 @@ from nexusgraph.observability.logging import configure_logging, get_logger
 from nexusgraph.observability.tracing import (
     InMemoryTraceSink,
     SpanRecord,
-    TraceRecorder,
-    TraceRecord,
-    TraceSink,
     Tracer,
+    TraceRecord,
+    TraceRecorder,
+    TraceSink,
 )
 
 __all__ = [

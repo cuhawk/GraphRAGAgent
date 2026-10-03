@@ -10,10 +10,9 @@ from __future__ import annotations
 from datetime import UTC, datetime
 
 from pgvector.sqlalchemy import Vector
-from sqlalchemy import JSON, DateTime, Float, Integer, String, Text
+from sqlalchemy import JSON, DateTime, Float, Index, Integer, String, Text
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
-from sqlalchemy import Index
 
 _JSON_VARIANT = JSON().with_variant(JSONB(), "postgresql")
 _EMBEDDING_VARIANT = JSON().with_variant(Vector(), "postgresql")

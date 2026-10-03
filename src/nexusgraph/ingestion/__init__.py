@@ -2,8 +2,8 @@
 
 from nexusgraph.ingestion.chunking import chunk_text
 from nexusgraph.ingestion.extraction import DeterministicExtractor, LLMAssistedExtractor
-from nexusgraph.ingestion.pipeline import IngestionPipeline, IngestionReport
 from nexusgraph.ingestion.parsers import ParseError, parse_file
+from nexusgraph.ingestion.pipeline import IngestionPipeline, IngestionReport
 from nexusgraph.ingestion.resolution import EntityResolver, dedupe_entities, normalize_name
 
 __all__ = [

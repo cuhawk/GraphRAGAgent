@@ -3,6 +3,7 @@
 from nexusgraph.domain.models import (
     AgentAnswer,
     Aggregation,
+    Chunk,
     Claim,
     ClaimVerification,
     DocumentDetail,
@@ -22,7 +23,6 @@ from nexusgraph.domain.models import (
     StructuredQueryResult,
     ToolRun,
     Usage,
-    Chunk,
 )
 
 __all__ = [

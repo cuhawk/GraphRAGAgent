@@ -19,8 +19,8 @@ def chunk_text(text: str, max_chars: int = 1_200) -> list[str]:
     chunks: list[str] = []
     buffer = ""
 
-    for paragraph in _PARAGRAPH_RE.split(text):
-        paragraph = paragraph.strip()
+    for raw_paragraph in _PARAGRAPH_RE.split(text):
+        paragraph = raw_paragraph.strip()
         if not paragraph:
             continue
         if len(paragraph) > max_chars:
