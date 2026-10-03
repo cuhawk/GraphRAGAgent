@@ -1,0 +1,190 @@
+@prefix rdf:  <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix owl:  <http://www.w3.org/2002/07/owl#> .
+@prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .
+@prefix ngx:  <https://nexusgraph.dev/ontology#> .
+
+<https://nexusgraph.dev/ontology> a owl:Ontology ;
+    rdfs:label "NexusGraph Synthetic Life-Sciences Ontology" ;
+    rdfs:comment """
+        Synthetic, fictional ontology for the NexusGraph GraphRAG project.
+        It models a fictional clinical-operations enterprise: companies, compounds,
+        products, clinical trials, sites, investigators, hospitals, geography,
+        milestones, safety/quality events and research documents.
+        Every instance of these classes in this repository is synthetic and
+        carries no real-world medical information. Relationship properties use
+        the SCREAMING_CASE local name that matches the relation vocabulary used
+        across the codebase (CSV, tools, API).
+        """ .
+
+# ---------------------------------------------------------------------------
+# Classes
+# ---------------------------------------------------------------------------
+
+ngx:Company a owl:Class ; rdfs:label "Company" ;
+    rdfs:comment "A fictional pharmaceutical company owning products and sponsoring trials." .
+
+ngx:Product a owl:Class ; rdfs:label "Product" ;
+    rdfs:comment "A fictional therapeutic product derived from a compound." .
+
+ngx:Compound a owl:Class ; rdfs:label "Compound" ;
+    rdfs:comment "A fictional chemical compound investigated in trials." .
+
+ngx:ClinicalTrial a owl:Class ; rdfs:label "ClinicalTrial" ;
+    rdfs:comment "A fictional clinical trial sponsored by a company." .
+
+ngx:TrialSite a owl:Class ; rdfs:label "TrialSite" ;
+    rdfs:comment "A fictional site that enrols patients for one or more trials." .
+
+ngx:Hospital a owl:Class ; rdfs:label "Hospital" ;
+    rdfs:comment "A fictional hospital hosting one or more trial sites." .
+
+ngx:Investigator a owl:Class ; rdfs:label "Investigator" ;
+    rdfs:comment "A fictional investigator working at a trial site." .
+
+ngx:Country a owl:Class ; rdfs:label "Country" ;
+    rdfs:comment "A fictional country." .
+
+ngx:Region a owl:Class ; rdfs:label "Region" ;
+    rdfs:comment "A fictional operating region grouping countries." .
+
+ngx:StudyPhase a owl:Class ; rdfs:label "StudyPhase" ;
+    rdfs:comment "Named individual representing a trial phase (I, II, III)." .
+
+ngx:ResearchDocument a owl:Class ; rdfs:label "ResearchDocument" ;
+    rdfs:comment "A synthetic research/operations document ingested into the corpus." .
+
+ngx:SafetyEvent a owl:Class ; rdfs:label "SafetyEvent" ;
+    rdfs:comment "A fictional operational safety/quality event at a site (not a medical outcome)." .
+
+ngx:Milestone a owl:Class ; rdfs:label "Milestone" ;
+    rdfs:comment "A trial milestone with a due date and optional completion date." .
+
+# Named study-phase individuals
+ngx:phase_1 a ngx:StudyPhase ; rdfs:label "Phase I" .
+ngx:phase_2 a ngx:StudyPhase ; rdfs:label "Phase II" .
+ngx:phase_3 a ngx:StudyPhase ; rdfs:label "Phase III" .
+
+# ---------------------------------------------------------------------------
+# Object properties (SCREAMING_CASE = relation vocabulary used across the repo)
+# ---------------------------------------------------------------------------
+
+ngx:TRIAL_USES_COMPOUND a owl:ObjectProperty ;
+    rdfs:label "TRIAL_USES_COMPOUND" ;
+    rdfs:domain ngx:ClinicalTrial ; rdfs:range ngx:Compound ;
+    rdfs:comment "A trial investigates a compound." .
+
+ngx:TRIAL_HAS_SITE a owl:ObjectProperty ;
+    rdfs:label "TRIAL_HAS_SITE" ;
+    rdfs:domain ngx:ClinicalTrial ; rdfs:range ngx:TrialSite ;
+    rdfs:comment "A trial is conducted at a site." .
+
+ngx:SITE_LOCATED_IN a owl:ObjectProperty ;
+    rdfs:label "SITE_LOCATED_IN" ;
+    rdfs:domain ngx:TrialSite ;
+    rdfs:range ngx:Hospital, ngx:Country ;
+    rdfs:comment "A site is located at a hospital, or directly in a country." .
+
+ngx:HOSPITAL_LOCATED_IN a owl:ObjectProperty ;
+    rdfs:label "HOSPITAL_LOCATED_IN" ;
+    rdfs:domain ngx:Hospital ; rdfs:range ngx:Country ;
+    rdfs:comment "A hospital is located in a country." .
+
+ngx:COUNTRY_IN_REGION a owl:ObjectProperty ;
+    rdfs:label "COUNTRY_IN_REGION" ;
+    rdfs:domain ngx:Country ; rdfs:range ngx:Region ;
+    rdfs:comment "A country belongs to an operating region." .
+
+ngx:INVESTIGATOR_WORKS_AT a owl:ObjectProperty ;
+    rdfs:label "INVESTIGATOR_WORKS_AT" ;
+    rdfs:domain ngx:Investigator ; rdfs:range ngx:TrialSite ;
+    rdfs:comment "An investigator works at a site." .
+
+ngx:PRODUCT_DERIVED_FROM a owl:ObjectProperty ;
+    rdfs:label "PRODUCT_DERIVED_FROM" ;
+    rdfs:domain ngx:Product ; rdfs:range ngx:Compound ;
+    rdfs:comment "A product is derived from a compound." .
+
+ngx:COMPOUND_RELATED_TO_PRODUCT a owl:ObjectProperty ;
+    rdfs:label "COMPOUND_RELATED_TO_PRODUCT" ;
+    rdfs:domain ngx:Compound ; rdfs:range ngx:Product ;
+    rdfs:comment "Inverse of PRODUCT_DERIVED_FROM, materialised explicitly." .
+
+ngx:COMPANY_OWNS_PRODUCT a owl:ObjectProperty ;
+    rdfs:label "COMPANY_OWNS_PRODUCT" ;
+    rdfs:domain ngx:Company ; rdfs:range ngx:Product ;
+    rdfs:comment "A company owns a product." .
+
+ngx:COMPANY_SPONSORS_TRIAL a owl:ObjectProperty ;
+    rdfs:label "COMPANY_SPONSORS_TRIAL" ;
+    rdfs:domain ngx:Company ; rdfs:range ngx:ClinicalTrial ;
+    rdfs:comment "A company sponsors a trial." .
+
+ngx:TRIAL_HAS_MILESTONE a owl:ObjectProperty ;
+    rdfs:label "TRIAL_HAS_MILESTONE" ;
+    rdfs:domain ngx:ClinicalTrial ; rdfs:range ngx:Milestone ;
+    rdfs:comment "A trial has a milestone." .
+
+ngx:TRIAL_REPORTS_SAFETY_EVENT a owl:ObjectProperty ;
+    rdfs:label "TRIAL_REPORTS_SAFETY_EVENT" ;
+    rdfs:domain ngx:ClinicalTrial ; rdfs:range ngx:SafetyEvent ;
+    rdfs:comment "A trial reports an operational safety/quality event." .
+
+ngx:SAFETY_EVENT_AT_SITE a owl:ObjectProperty ;
+    rdfs:label "SAFETY_EVENT_AT_SITE" ;
+    rdfs:domain ngx:SafetyEvent ; rdfs:range ngx:TrialSite ;
+    rdfs:comment "An operational safety/quality event occurred at a site." .
+
+ngx:SAFETY_EVENT_INVOLVES_COMPOUND a owl:ObjectProperty ;
+    rdfs:label "SAFETY_EVENT_INVOLVES_COMPOUND" ;
+    rdfs:domain ngx:SafetyEvent ; rdfs:range ngx:Compound ;
+    rdfs:comment "An operational safety/quality event involves a compound." .
+
+ngx:DOCUMENT_MENTIONS a owl:ObjectProperty ;
+    rdfs:label "DOCUMENT_MENTIONS" ;
+    rdfs:domain ngx:ResearchDocument ;
+    rdfs:comment "A document mentions an entity; range is any ngx entity. Derived at ingestion with provenance." .
+
+# ---------------------------------------------------------------------------
+# Datatype properties
+# ---------------------------------------------------------------------------
+
+ngx:name a owl:DatatypeProperty ; rdfs:label "name" ;
+    rdfs:comment "Human-readable name of the entity." ;
+    rdfs:domain rdfs:Resource ; rdfs:range xsd:string .
+
+ngx:description a owl:DatatypeProperty ; rdfs:label "description" ;
+    rdfs:domain rdfs:Resource ; rdfs:range xsd:string .
+
+ngx:inPhase a owl:DatatypeProperty ; rdfs:label "inPhase" ;
+    rdfs:domain ngx:ClinicalTrial ; rdfs:range ngx:StudyPhase .
+
+ngx:status a owl:DatatypeProperty ; rdfs:label "status" ;
+    rdfs:domain ngx:ClinicalTrial ; rdfs:range xsd:string .
+
+ngx:startDate a owl:DatatypeProperty ; rdfs:label "startDate" ;
+    rdfs:domain ngx:ClinicalTrial ; rdfs:range xsd:date .
+
+ngx:plannedEndDate a owl:DatatypeProperty ; rdfs:label "plannedEndDate" ;
+    rdfs:domain ngx:ClinicalTrial ; rdfs:range xsd:date .
+
+ngx:dueDate a owl:DatatypeProperty ; rdfs:label "dueDate" ;
+    rdfs:domain ngx:Milestone ; rdfs:range xsd:date .
+
+ngx:completedDate a owl:DatatypeProperty ; rdfs:label "completedDate" ;
+    rdfs:domain ngx:Milestone ; rdfs:range xsd:date .
+
+ngx:severity a owl:DatatypeProperty ; rdfs:label "severity" ;
+    rdfs:domain ngx:SafetyEvent ; rdfs:range xsd:string .
+
+ngx:reportedAt a owl:DatatypeProperty ; rdfs:label "reportedAt" ;
+    rdfs:domain ngx:SafetyEvent ; rdfs:range xsd:date .
+
+ngx:title a owl:DatatypeProperty ; rdfs:label "title" ;
+    rdfs:domain ngx:ResearchDocument ; rdfs:range xsd:string .
+
+ngx:contentType a owl:DatatypeProperty ; rdfs:label "contentType" ;
+    rdfs:domain ngx:ResearchDocument ; rdfs:range xsd:string .
+
+ngx:documentDate a owl:DatatypeProperty ; rdfs:label "documentDate" ;
+    rdfs:domain ngx:ResearchDocument ; rdfs:range xsd:date .

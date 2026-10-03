@@ -32,6 +32,7 @@ dependencies = [
     "opentelemetry-exporter-otlp>=1.26",
     "mcp>=1.2",
     "pypdf>=4.3",
+    "fpdf2>=2.7",
 ]
 
 [project.optional-dependencies]
@@ -40,7 +41,6 @@ dev = [
     "pytest-cov>=5.0",
     "ruff>=0.6",
     "mypy>=1.11",
-    "fpdf2>=2.7",
 ]
 
 [project.scripts]
