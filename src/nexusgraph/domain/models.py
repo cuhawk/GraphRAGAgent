@@ -83,6 +83,7 @@ class Chunk(BaseModel):
     text: str
     entity_ids: list[str] = Field(default_factory=list)
     metadata: dict[str, Any] = Field(default_factory=dict)
+    embedding: list[float] | None = None
 
 
 class SearchHit(BaseModel):
