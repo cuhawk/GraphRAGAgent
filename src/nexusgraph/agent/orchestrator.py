@@ -11,6 +11,8 @@ the ledger before returning.
 from __future__ import annotations
 
 import time
+from collections.abc import Callable
+from typing import Any
 
 from nexusgraph.agent.evidence import EvidenceLedger
 from nexusgraph.agent.planner import make_planner
@@ -92,13 +94,28 @@ class AgentOrchestrator:
         """Rebuild the question-time entity resolver (after ingestion)."""
         self._resolver = None
 
-    def run(self, question: str) -> AgentAnswer:
+    def run(self, question: str,
+            progress_cb: Callable[[str, dict[str, Any]], None] | None = None
+            ) -> AgentAnswer:
+        """Answer ``question``; optionally report progress events.
+
+        ``progress_cb(event_name, payload)`` is invoked from the caller's
+        thread (before the answer returns) at plan time, after each tool
+        step and after synthesis - the streaming endpoint's transport.
+        """
         question = (question or "").strip()
         if not question:
             raise ValueError("question must not be empty")
         if len(question) > self.limits.max_input_chars:
             raise ValueError(
                 f"question exceeds the {self.limits.max_input_chars}-character limit")
+
+        def emit(event: str, payload: dict[str, Any]) -> None:
+            if progress_cb is not None:
+                try:
+                    progress_cb(event, payload)
+                except Exception:  # pragma: no cover - transport must not break runs
+                    logger.exception("progress callback failed")
 
         started = time.perf_counter()
         trace = self.runtime.tracer.start_trace()
@@ -124,6 +141,10 @@ class AgentOrchestrator:
             plan_rationale = plan.rationale
             trace.set_attributes(question_type=question_type,
                                  planned_steps=len(plan.steps))
+            emit("plan", {"question_type": question_type,
+                          "steps": [{"tool": s.tool,
+                                     "intent": s.args.get("intent", "")}
+                                    for s in plan.steps]})
 
             with trace.span("execute_plan"):
                 for step in plan.steps:
@@ -133,6 +154,7 @@ class AgentOrchestrator:
                         step, ctx, ledger, resolved, question)
                     tool_runs.append(tool_run)
                     outcomes.append(outcome)
+                    emit("tool", tool_run.model_dump(mode="json"))
 
             with trace.span("synthesize"):
                 request = SynthesisRequest(
@@ -140,6 +162,9 @@ class AgentOrchestrator:
                     outcomes=outcomes, resolved=resolved)
                 draft = self._synthesizer.synthesize(request, ledger)
             usage.add(_synthesizer_usage(self._synthesizer))
+            emit("synthesis", {"insufficient": draft.insufficient,
+                               "claims": len(draft.claims),
+                               "evidence": len(ledger.items())})
 
             claims, answer_text = self._verify(draft, ledger)
         except Exception as exc:

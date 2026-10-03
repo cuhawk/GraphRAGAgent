@@ -54,6 +54,10 @@ class TraceRecord(BaseModel):
 class TraceSink(Protocol):
     def save(self, record: TraceRecord) -> None: ...
 
+    def get(self, trace_id: str) -> TraceRecord | None: ...
+
+    def list(self, limit: int = 50) -> list[TraceRecord]: ...
+
 
 class InMemoryTraceSink:
     """Bounded sink used by tests and as fallback when no DB is bound."""

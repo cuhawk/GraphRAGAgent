@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NexusGraph — GraphRAG Agent</title>
+<style>
+  :root {
+    --bg: #0f1419; --panel: #1a2028; --panel2: #212a34; --border: #2d3948;
+    --text: #e6edf3; --muted: #8b98a5; --accent: #4ba3f5; --ok: #3fb950;
+    --warn: #d29922; --err: #f85149; --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text);
+         font: 15px/1.5 -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+  header { display: flex; align-items: baseline; gap: 12px; padding: 18px 24px 0; }
+  header h1 { font-size: 20px; margin: 0; letter-spacing: .3px; }
+  header h1 span { color: var(--accent); }
+  .badge { font-size: 11px; color: var(--muted); border: 1px solid var(--border);
+           border-radius: 10px; padding: 2px 9px; }
+  main { display: grid; grid-template-columns: minmax(0, 1fr) 360px;
+         gap: 16px; padding: 16px 24px 40px; align-items: start; }
+  @media (max-width: 980px) { main { grid-template-columns: 1fr; } }
+  .card { background: var(--panel); border: 1px solid var(--border);
+          border-radius: 10px; padding: 16px; margin-bottom: 16px; }
+  .card h2 { font-size: 12px; text-transform: uppercase; letter-spacing: 1px;
+             color: var(--muted); margin: 0 0 10px; }
+  #qform { display: flex; gap: 8px; }
+  #question { flex: 1; background: var(--panel2); color: var(--text);
+              border: 1px solid var(--border); border-radius: 8px;
+              padding: 10px 14px; font-size: 15px; }
+  #question:focus { outline: 1px solid var(--accent); }
+  button { background: var(--accent); color: #06111f; border: 0; border-radius: 8px;
+           padding: 10px 18px; font-weight: 600; cursor: pointer; }
+  button:disabled { opacity: .5; cursor: default; }
+  button.ghost { background: var(--panel2); color: var(--text); border: 1px solid var(--border); }
+  .examples { margin-top: 10px; display: flex; flex-wrap: wrap; gap: 6px; }
+  .examples button { font-size: 12px; padding: 4px 10px; font-weight: 400; }
+  #answer-text { white-space: pre-wrap; }
+  .claims li { margin: 8px 0; }
+  .claim-id { font-family: var(--mono); color: var(--accent); font-size: 12px; }
+  .meta { display: flex; flex-wrap: wrap; gap: 14px; color: var(--muted); font-size: 13px;
+          margin-top: 12px; }
+  .meta b { color: var(--text); font-weight: 600; }
+  .chip { display: inline-block; font-family: var(--mono); font-size: 11.5px;
+          background: var(--panel2); border: 1px solid var(--border);
+          border-radius: 6px; padding: 2px 8px; margin: 2px; }
+  .chip.err { border-color: var(--err); color: var(--err); }
+  .evidence-item { border-left: 3px solid var(--accent); padding: 6px 10px;
+                   margin: 8px 0; background: var(--panel2); border-radius: 0 6px 6px 0; }
+  .evidence-item .src { font-family: var(--mono); font-size: 11.5px; color: var(--muted); }
+  .evidence-item .snippet { font-size: 13px; margin-top: 4px; color: var(--text); }
+  .insufficient { border: 1px solid var(--warn); color: var(--warn);
+                  border-radius: 8px; padding: 10px 14px; }
+  #trace-tree { font-family: var(--mono); font-size: 12px; overflow-x: auto; }
+  #trace-tree .span { padding: 2px 0; white-space: nowrap; }
+  #trace-tree .err { color: var(--err); }
+  #trace-tree .dur { color: var(--muted); }
+  #entity-results .ent { display: flex; justify-content: space-between; gap: 8px;
+                         padding: 7px 10px; border-radius: 6px; cursor: pointer; }
+  #entity-results .ent:hover { background: var(--panel2); }
+  #entity-results .ent .type { color: var(--muted); font-family: var(--mono); font-size: 11.5px; }
+  #entity-detail .rel { font-family: var(--mono); font-size: 12px; color: var(--muted); }
+  .muted { color: var(--muted); }
+  #status-line { color: var(--muted); font-size: 13px; margin-top: 8px; min-height: 18px; }
+  details summary { cursor: pointer; color: var(--accent); font-size: 13px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Nexus<span>Graph</span></h1>
+  <span class="badge">GraphRAG agent</span>
+  <span class="badge">synthetic data only</span>
+  <span class="badge" id="ready-badge">checking…</span>
+</header>
+<main>
+  <section>
+    <div class="card">
+      <h2>Ask the knowledge graph</h2>
+      <form id="qform">
+        <input id="question" type="text" autocomplete="off"
+               placeholder="e.g. Why is enrolment falling at Site A and which compounds named in safety reports are linked to it?">
+        <button id="ask-btn" type="submit">Ask</button>
+      </form>
+      <div class="examples">
+        <button class="ghost" data-q="How did patient enrolment and cost change at Site A over time?">trends at Site A</button>
+        <button class="ghost" data-q="Which products are derived from compounds used in trials that have delayed milestones?">delayed trials → products</button>
+        <button class="ghost" data-q="In the Western Europe Cluster region, is patient enrolment increasing or declining, and what is happening to investigator capacity?">region trends</button>
+        <button class="ghost" data-q="What is the market share of NexuPharm?">unanswerable</button>
+      </div>
+      <div id="status-line"></div>
+    </div>
+
+    <div class="card" id="answer-card" hidden>
+      <h2>Answer</h2>
+      <div id="answer-banner" hidden class="insufficient"></div>
+      <div id="answer-text"></div>
+      <div class="meta">
+        <span>type <b id="m-type">—</b></span>
+        <span>latency <b id="m-latency">—</b></span>
+        <span>tools <b id="m-tools">—</b></span>
+        <span>evidence <b id="m-evidence">—</b></span>
+        <span>trace <b class="chip" id="m-trace">—</b></span>
+      </div>
+      <details id="tools-details" open><summary>Tools used</summary><div id="tools-used" style="margin-top:8px"></div></details>
+      <details id="claims-details" open><summary>Claims &amp; citations</summary><ul class="claims" id="claims-list"></ul></details>
+    </div>
+
+    <div class="card" id="evidence-card" hidden>
+      <h2>Evidence</h2>
+      <div id="evidence-list"></div>
+    </div>
+  </section>
+
+  <aside>
+    <div class="card">
+      <h2>Trace</h2>
+      <div id="trace-tree" class="muted">Run a query to record a trace.</div>
+    </div>
+    <div class="card" id="entity-explorer">
+      <h2>Entity explorer</h2>
+      <form id="esearch" style="display:flex; gap:8px">
+        <input id="eq" placeholder="Search entities…" style="flex:1; background:var(--panel2); color:var(--text); border:1px solid var(--border); border-radius:8px; padding:8px 10px;">
+        <button class="ghost" type="submit">Find</button>
+      </form>
+      <div id="entity-results" style="margin-top:8px"></div>
+      <div id="entity-detail"></div>
+    </div>
+  </aside>
+</main>
+<script>
+const $ = (id) => document.getElementById(id);
+
+fetch('/ready').then(r => r.ok ? r.json() : Promise.reject())
+  .then(() => $('ready-badge').textContent = 'ready')
+  .catch(() => $('ready-badge').textContent = 'not ready');
+
+document.querySelectorAll('.examples button').forEach(b =>
+  b.addEventListener('click', () => { $('question').value = b.dataset.q; }));
+
+$('qform').addEventListener('submit', async (ev) => {
+  ev.preventDefault();
+  const question = $('question').value.trim();
+  if (!question) return;
+  $('ask-btn').disabled = true;
+  $('status-line').textContent = '';
+  $('answer-card').hidden = false;
+  $('evidence-card').hidden = false;
+  $('answer-text').textContent = '';
+  $('answer-banner').hidden = true;
+  $('claims-list').innerHTML = '';
+  $('evidence-list').innerHTML = '';
+  $('tools-used').innerHTML = '';
+  try {
+    const resp = await fetch('/v1/query/stream', {
+      method: 'POST', headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({question}),
+    });
+    if (!resp.ok || !resp.body) {
+      const err = await resp.json().catch(() => ({detail: resp.statusText}));
+      throw new Error(err.detail || ('HTTP ' + resp.status));
+    }
+    await readSSE(resp.body, handleEvent);
+  } catch (e) {
+    $('status-line').textContent = 'error: ' + e.message;
+  } finally {
+    $('ask-btn').disabled = false;
+  }
+});
+
+async function readSSE(body, onEvent) {
+  const reader = body.getReader();
+  const decoder = new TextDecoder();
+  let buf = '';
+  for (;;) {
+    const {value, done} = await reader.read();
+    if (done) break;
+    buf += decoder.decode(value, {stream: true});
+    let idx;
+    while ((idx = buf.indexOf('\n\n')) >= 0) {
+      const chunk = buf.slice(0, idx); buf = buf.slice(idx + 2);
+      const mEvent = chunk.match(/^event: (.+)$/m);
+      const mData = chunk.match(/^data: (.+)$/m);
+      if (mEvent && mData) onEvent(mEvent[1], JSON.parse(mData[1]));
+    }
+  }
+}
+
+let pendingAnswer = null;
+function handleEvent(event, data) {
+  if (event === 'plan') {
+    $('status-line').textContent =
+      'plan: ' + data.question_type + ' → ' +
+      data.steps.map(s => s.tool).join(', ');
+  } else if (event === 'tool') {
+    const label = data.tool + (data.status === 'error' ? ' ✗' : ' · ' + data.result_count);
+    $('status-line').textContent = 'tool: ' + label;
+    addChip($('tools-used'), data.tool, data.status === 'error');
+    $('status-line').dataset.count = data.tool;
+  } else if (event === 'synthesis') {
+    $('status-line').textContent = data.insufficient
+      ? 'evidence insufficient — refusing to guess'
+      : 'synthesizing from ' + data.evidence + ' evidence items…';
+  } else if (event === 'final') {
+    renderAnswer(data);
+  } else if (event === 'error') {
+    $('status-line').textContent = 'error: ' + data.error;
+  }
+}
+
+function addChip(el, text, isErr) {
+  const span = document.createElement('span');
+  span.className = 'chip' + (isErr ? ' err' : '');
+  span.textContent = text;
+  el.appendChild(span);
+}
+
+function renderAnswer(a) {
+  pendingAnswer = a;
+  $('status-line').textContent = '';
+  $('answer-banner').hidden = !a.insufficient;
+  $('answer-banner').textContent = a.insufficient
+    ? ('Insufficient evidence' + (a.insufficient_reason ? ': ' + a.insufficient_reason : ''))
+    : '';
+  $('answer-text').textContent = a.answer;
+  $('m-type').textContent = a.question_type;
+  $('m-latency').textContent = Math.round(a.latency_ms) + ' ms';
+  $('m-tools').textContent = a.tools_used.length;
+  $('m-evidence').textContent = a.evidence.length;
+  $('m-trace').textContent = a.trace_id.slice(0, 10) + '…';
+  $('m-trace').title = a.trace_id;
+
+  const tools = $('tools-used');
+  tools.innerHTML = '';
+  (a.tools_used || []).forEach(t =>
+    addChip(tools, `${t.tool} (${t.status}, ${t.result_count})`, t.status === 'error'));
+
+  const claims = $('claims-list');
+  claims.innerHTML = '';
+  (a.claims || []).forEach((c, i) => {
+    const li = document.createElement('li');
+    const ids = (c.evidence_ids || []).map(e =>
+      `<span class="claim-id">[${e.replace('ev-', '')}]</span>`).join(' ');
+    li.innerHTML = `<span class="claim-id">C${i + 1}</span> ${escapeHtml(c.claim)} ${ids}`;
+    claims.appendChild(li);
+  });
+
+  const evl = $('evidence-list');
+  evl.innerHTML = '';
+  (a.evidence || []).forEach(e => {
+    const div = document.createElement('div');
+    div.className = 'evidence-item';
+    const snippet = e.snippet ? `<div class="snippet">${escapeHtml(e.snippet)}</div>` : '';
+    div.innerHTML = `<div class="src">[${e.evidence_id.replace('ev-', '')}] ` +
+      `${e.source_type} · ${escapeHtml(e.source_id)} · ${escapeHtml(e.location)}</div>${snippet}`;
+    evl.appendChild(div);
+  });
+
+  loadTrace(a.trace_id);
+}
+
+async function loadTrace(traceId) {
+  const tree = $('trace-tree');
+  try {
+    const r = await fetch('/v1/traces/' + traceId);
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    const t = await r.json();
+    tree.innerHTML = '';
+    const byParent = {};
+    t.spans.forEach(s => (byParent[s.parent_span_id || ''] ||= []).push(s));
+    const render = (parent, depth) => {
+      (byParent[parent] || []).forEach(s => {
+        const div = document.createElement('div');
+        div.className = 'span' + (s.status === 'error' ? ' err' : '');
+        div.style.paddingLeft = (depth * 14) + 'px';
+        const attrs = Object.entries(s.attributes || {})
+          .map(([k, v]) => `${k}=${String(v).slice(0, 60)}`).join(' ');
+        div.innerHTML = `${escapeHtml(s.name)} ` +
+          `<span class="dur">${(s.duration_ms ?? 0).toFixed(1)} ms</span>` +
+          (attrs ? ` <span class="dur">${escapeHtml(attrs)}</span>` : '');
+        tree.appendChild(div);
+        render(s.span_id, depth + 1);
+      });
+    };
+    render('', 0);
+  } catch (e) {
+    tree.textContent = 'trace unavailable: ' + e.message;
+  }
+}
+
+$('esearch').addEventListener('submit', async (ev) => {
+  ev.preventDefault();
+  const q = $('eq').value.trim();
+  const r = await fetch('/v1/entities?q=' + encodeURIComponent(q) + '&limit=15');
+  const ents = await r.json();
+  const box = $('entity-results');
+  box.innerHTML = '';
+  $('entity-detail').innerHTML = '';
+  if (!ents.length) { box.innerHTML = '<div class="muted">no matches</div>'; return; }
+  ents.forEach(e => {
+    const div = document.createElement('div');
+    div.className = 'ent';
+    div.innerHTML = `<span>${escapeHtml(e.name)}</span><span class="type">${e.type}</span>`;
+    div.addEventListener('click', () => showEntity(e.id));
+    box.appendChild(div);
+  });
+});
+
+async function showEntity(id) {
+  const r = await fetch('/v1/entities/' + encodeURIComponent(id));
+  if (!r.ok) return;
+  const d = await r.json();
+  $('entity-detail').innerHTML =
+    `<h2 style="margin-top:14px">${escapeHtml(d.entity.name)}</h2>` +
+    `<div class="muted" style="font-size:13px">${escapeHtml(d.entity.description || '')}</div>` +
+    `<div style="margin-top:8px">` +
+    d.relationships.map(rel =>
+      `<div class="rel">- ${rel.relation} → ${escapeHtml(rel.target_id)}</div>`).join('') +
+    `</div>`;
+}
+
+function escapeHtml(s) {
+  return String(s ?? '').replace(/[&<>"']/g,
+    c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+</script>
+</body>
+</html>
