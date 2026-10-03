@@ -46,6 +46,29 @@ class GraphStore:
         """Bulk-load generated entity/relationship data (default graph)."""
         self._store.load(path=path, format=ox.RdfFormat.TURTLE)
 
+    def add_document_entity(self, document_id: str, title: str, content_type: str,
+                            document_date: str | None, entity_uris: list[str]) -> int:
+        """Write the document entity (rdf:type, title, ...) plus DOCUMENT_MENTIONS
+        triples into the document's named graph — full provenance scoping."""
+        graph = ox.NamedNode(document_graph_uri(document_id))
+        doc = ox.NamedNode(document_uri(document_id))
+        ngx = ONTOLOGY_BASE
+        rdf_type = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type"
+        self._store.add(ox.Quad(doc, ox.NamedNode(rdf_type),
+                                ox.NamedNode(f"{ngx}ResearchDocument"), graph))
+        self._store.add(ox.Quad(doc, ox.NamedNode(f"{ngx}title"),
+                                ox.Literal(title), graph))
+        self._store.add(ox.Quad(doc, ox.NamedNode(f"{ngx}contentType"),
+                                ox.Literal(content_type), graph))
+        if document_date:
+            xsd_date = "http://www.w3.org/2001/XMLSchema#date"
+            self._store.add(ox.Quad(doc, ox.NamedNode(f"{ngx}documentDate"),
+                                    ox.Literal(document_date, datatype=ox.NamedNode(xsd_date)),
+                                    graph))
+        for uri in entity_uris:
+            self._store.add(ox.Quad(doc, _MENTION, ox.NamedNode(uri), graph))
+        return len(entity_uris)
+
     def add_document_mentions(self, document_id: str, entity_uris: list[str]) -> int:
         """Write DOCUMENT_MENTIONS triples into the document's named graph."""
         graph = ox.NamedNode(document_graph_uri(document_id))

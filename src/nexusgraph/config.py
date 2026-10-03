@@ -52,7 +52,7 @@ class LimitsSettings(BaseModel):
     max_rows: int = Field(default=200, ge=1)
     max_result_bytes: int = Field(default=64_000, ge=1)
     max_input_chars: int = Field(default=8_000, ge=1)
-    max_chunk_chars: int = Field(default=1_200, ge=100)
+    max_chunk_chars: int = Field(default=800, ge=100)
     max_retrieval_chars: int = Field(default=12_000, ge=1)
     tool_timeout_s: float = Field(default=20.0, gt=0)
     sparql_timeout_s: float = Field(default=5.0, gt=0)

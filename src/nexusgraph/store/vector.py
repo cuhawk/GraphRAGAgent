@@ -49,6 +49,7 @@ class LocalVectorIndex:
         self._ids: list[str] = []
         self._matrix: np.ndarray | None = None
         self._meta: dict[str, tuple[str, list[str], str]] = {}  # id -> (doc_id, eids, ctype)
+        self.refresh()
 
     def refresh(self) -> int:
         from nexusgraph.db.orm import ChunkRow, DocumentRow

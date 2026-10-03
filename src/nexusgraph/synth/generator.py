@@ -391,7 +391,7 @@ def build_corpus(seed: int = 42) -> Corpus:
     for tid, name, due, completed in MILESTONES:
         mid = f"M-{3001 + MILESTONES.index((tid, name, due, completed))}"
         corpus.entities.append(EntityRec(
-            f"milestone:{mid}", "milestone", name,
+            f"milestone:{mid}", "milestone", f"{name} ({tid})",
             f"Milestone {name} of trial {tid} (due {due})."))
         corpus.relationships.append((f"trial:{tid}", f"milestone:{mid}", "TRIAL_HAS_MILESTONE"))
         corpus.tables.setdefault("milestones", []).append({
