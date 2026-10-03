@@ -35,21 +35,23 @@ class OpenAICompatClient:
     def complete(self, request: CompletionRequest) -> CompletionResponse:
         payload: dict[str, object] = {
             "model": self._model,
-            "messages": [{"role": m.role, "content": m.content}
-                         for m in request.messages],
+            "messages": [{"role": m.role, "content": m.content} for m in request.messages],
             "temperature": request.temperature,
             "max_tokens": request.max_tokens,
         }
         if request.json_mode:
             payload["response_format"] = {"type": "json_object"}
 
-        headers = {"Content-Type": "application/json",
-                   "Authorization": f"Bearer {self._settings.api_key}"}
+        headers = {
+            "Content-Type": "application/json",
+            "Authorization": f"Bearer {self._settings.api_key}",
+        }
         prompt_text = "\n".join(m.content for m in request.messages)
 
         with httpx.Client(timeout=self._timeout) as client:
-            response = client.post(f"{self._settings.base_url}/chat/completions",
-                                   json=payload, headers=headers)
+            response = client.post(
+                f"{self._settings.base_url}/chat/completions", json=payload, headers=headers
+            )
         if response.status_code >= 400:
             logger.warning("LLM HTTP %s: %s", response.status_code, response.text[:300])
             response.raise_for_status()
@@ -57,10 +59,8 @@ class OpenAICompatClient:
         choice = data["choices"][0]
         text = choice["message"]["content"] or ""
         usage_data = data.get("usage") or {}
-        prompt_tokens = int(usage_data.get("prompt_tokens")
-                            or estimate_tokens(prompt_text))
-        completion_tokens = int(usage_data.get("completion_tokens")
-                                or estimate_tokens(text))
+        prompt_tokens = int(usage_data.get("prompt_tokens") or estimate_tokens(prompt_text))
+        completion_tokens = int(usage_data.get("completion_tokens") or estimate_tokens(text))
         return CompletionResponse(
             text=text,
             usage=_usage(prompt_tokens, completion_tokens, self._settings),
@@ -70,8 +70,7 @@ class OpenAICompatClient:
         )
 
 
-def _usage(prompt_tokens: int, completion_tokens: int,
-           settings: LLMSettings) -> object:
+def _usage(prompt_tokens: int, completion_tokens: int, settings: LLMSettings) -> object:
     from nexusgraph.domain.models import Usage
 
     return Usage(

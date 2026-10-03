@@ -33,8 +33,9 @@ def validate_table(table: str, schema: dict[str, dict[str, str]]) -> str:
     return table
 
 
-def validate_columns(table: str, columns: list[str],
-                     schema: dict[str, dict[str, str]]) -> list[str]:
+def validate_columns(
+    table: str, columns: list[str], schema: dict[str, dict[str, str]]
+) -> list[str]:
     allowed = schema[table]
     for column in columns:
         validate_identifier(column, "column name")

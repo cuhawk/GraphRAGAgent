@@ -17,8 +17,13 @@ LEXICAL_WEIGHT = 0.35
 
 
 class RetrievalService:
-    def __init__(self, document_store: DocumentStore, vector_index: VectorIndex,
-                 embedder: Embedder, limits: LimitsSettings) -> None:
+    def __init__(
+        self,
+        document_store: DocumentStore,
+        vector_index: VectorIndex,
+        embedder: Embedder,
+        limits: LimitsSettings,
+    ) -> None:
         self._documents = document_store
         self._index = vector_index
         self._embedder = embedder
@@ -55,15 +60,17 @@ class RetrievalService:
         for chunk, lex in zip(ordered, lexical, strict=True):
             dense = dense_by_id.get(chunk.id, 0.0)
             score = DENSE_WEIGHT * dense + LEXICAL_WEIGHT * lex
-            hits.append(SearchHit(
-                chunk_id=chunk.id,
-                document_id=chunk.document_id,
-                score=round(score, 4),
-                text=chunk.text,
-                entity_ids=chunk.entity_ids,
-                dense_score=round(dense, 4),
-                lexical_score=round(lex, 4),
-            ))
+            hits.append(
+                SearchHit(
+                    chunk_id=chunk.id,
+                    document_id=chunk.document_id,
+                    score=round(score, 4),
+                    text=chunk.text,
+                    entity_ids=chunk.entity_ids,
+                    dense_score=round(dense, 4),
+                    lexical_score=round(lex, 4),
+                )
+            )
         hits.sort(key=lambda h: h.score, reverse=True)
         hits = hits[:k]
         titles = {d.id: d.title for d in self._documents.list_documents(limit=10_000)}

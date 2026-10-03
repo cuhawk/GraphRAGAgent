@@ -1,9 +1,9 @@
 """Command-line interface.
 
-    nexusgraph bootstrap     generate + ingest the synthetic dataset
-    nexusgraph serve         run the FastAPI server (UI + API)
-    nexusgraph mcp           run the MCP server over stdio
-    nexusgraph status        show store counts
+nexusgraph bootstrap     generate + ingest the synthetic dataset
+nexusgraph serve         run the FastAPI server (UI + API)
+nexusgraph mcp           run the MCP server over stdio
+nexusgraph status        show store counts
 """
 
 from __future__ import annotations
@@ -72,8 +72,11 @@ def main(argv: list[str] | None = None) -> int:
 
     boot = sub.add_parser("bootstrap", help="generate + ingest the synthetic dataset")
     boot.add_argument("--seed", type=int, default=42)
-    boot.add_argument("--no-regenerate", action="store_true",
-                      help="reuse the existing generated dataset if present")
+    boot.add_argument(
+        "--no-regenerate",
+        action="store_true",
+        help="reuse the existing generated dataset if present",
+    )
     boot.set_defaults(func=_cmd_bootstrap)
 
     serve = sub.add_parser("serve", help="run the API + UI server")

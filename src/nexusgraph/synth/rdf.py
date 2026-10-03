@@ -55,8 +55,7 @@ def build_data_graph(corpus: Corpus) -> ox.Store:
 
     # Trial attribute tables (source of typed literals in RDF)
     trial_rows = {str(r["trial_id"]): r for r in corpus.tables.get("trials", [])}
-    milestone_rows = {str(r["milestone_id"]): r
-                      for r in corpus.tables.get("milestones", [])}
+    milestone_rows = {str(r["milestone_id"]): r for r in corpus.tables.get("milestones", [])}
     safety_rows = {str(r["event_id"]): r for r in corpus.tables.get("safety_events", [])}
 
     for e in corpus.entities:
@@ -66,45 +65,85 @@ def build_data_graph(corpus: Corpus) -> ox.Store:
             store.add(ox.Quad(subject, _nn(RDF_TYPE), _nn(ngx + cls), ox.DefaultGraph()))
         store.add(ox.Quad(subject, _nn(ngx + "name"), _lit(e.name), ox.DefaultGraph()))
         if e.description:
-            store.add(ox.Quad(subject, _nn(ngx + "description"), _lit(e.description),
-                              ox.DefaultGraph()))
+            store.add(
+                ox.Quad(subject, _nn(ngx + "description"), _lit(e.description), ox.DefaultGraph())
+            )
 
         if e.type == "trial":
             row = trial_rows[e.id.split(":", 1)[1]]
-            store.add(ox.Quad(subject, _nn(ngx + "inPhase"),
-                              _nn(ngx + _PHASE_INDIVIDUAL[str(row["phase"])]),
-                              ox.DefaultGraph()))
-            store.add(ox.Quad(subject, _nn(ngx + "status"),
-                              _lit(str(row["status"])), ox.DefaultGraph()))
-            store.add(ox.Quad(subject, _nn(ngx + "startDate"),
-                              _lit(str(row["start_date"]), f"{XSD}date"), ox.DefaultGraph()))
-            store.add(ox.Quad(subject, _nn(ngx + "plannedEndDate"),
-                              _lit(str(row["planned_end_date"]), f"{XSD}date"),
-                              ox.DefaultGraph()))
+            store.add(
+                ox.Quad(
+                    subject,
+                    _nn(ngx + "inPhase"),
+                    _nn(ngx + _PHASE_INDIVIDUAL[str(row["phase"])]),
+                    ox.DefaultGraph(),
+                )
+            )
+            store.add(
+                ox.Quad(subject, _nn(ngx + "status"), _lit(str(row["status"])), ox.DefaultGraph())
+            )
+            store.add(
+                ox.Quad(
+                    subject,
+                    _nn(ngx + "startDate"),
+                    _lit(str(row["start_date"]), f"{XSD}date"),
+                    ox.DefaultGraph(),
+                )
+            )
+            store.add(
+                ox.Quad(
+                    subject,
+                    _nn(ngx + "plannedEndDate"),
+                    _lit(str(row["planned_end_date"]), f"{XSD}date"),
+                    ox.DefaultGraph(),
+                )
+            )
         elif e.type == "milestone":
             row = milestone_rows[e.id.split(":", 1)[1]]
-            store.add(ox.Quad(subject, _nn(ngx + "dueDate"),
-                              _lit(str(row["due_date"]), f"{XSD}date"), ox.DefaultGraph()))
+            store.add(
+                ox.Quad(
+                    subject,
+                    _nn(ngx + "dueDate"),
+                    _lit(str(row["due_date"]), f"{XSD}date"),
+                    ox.DefaultGraph(),
+                )
+            )
             if row["completed_date"]:
-                store.add(ox.Quad(subject, _nn(ngx + "completedDate"),
-                                  _lit(str(row["completed_date"]), f"{XSD}date"),
-                                  ox.DefaultGraph()))
+                store.add(
+                    ox.Quad(
+                        subject,
+                        _nn(ngx + "completedDate"),
+                        _lit(str(row["completed_date"]), f"{XSD}date"),
+                        ox.DefaultGraph(),
+                    )
+                )
         elif e.type == "safetyevent":
             row = safety_rows[e.id.split(":", 1)[1]]
-            store.add(ox.Quad(subject, _nn(ngx + "severity"),
-                              _lit(str(row["severity"])), ox.DefaultGraph()))
-            store.add(ox.Quad(subject, _nn(ngx + "reportedAt"),
-                              _lit(str(row["reported_at"]), f"{XSD}date"), ox.DefaultGraph()))
+            store.add(
+                ox.Quad(
+                    subject, _nn(ngx + "severity"), _lit(str(row["severity"])), ox.DefaultGraph()
+                )
+            )
+            store.add(
+                ox.Quad(
+                    subject,
+                    _nn(ngx + "reportedAt"),
+                    _lit(str(row["reported_at"]), f"{XSD}date"),
+                    ox.DefaultGraph(),
+                )
+            )
 
     for src, dst, rel in corpus.relationships:
         src_type, src_local = src.split(":", 1)
         dst_type, dst_local = dst.split(":", 1)
-        store.add(ox.Quad(
-            _nn(entity_uri(src_type, src_local)),
-            _nn(ngx + rel),
-            _nn(entity_uri(dst_type, dst_local)),
-            ox.DefaultGraph(),
-        ))
+        store.add(
+            ox.Quad(
+                _nn(entity_uri(src_type, src_local)),
+                _nn(ngx + rel),
+                _nn(entity_uri(dst_type, dst_local)),
+                ox.DefaultGraph(),
+            )
+        )
     return store
 
 

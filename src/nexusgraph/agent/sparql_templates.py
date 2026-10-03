@@ -9,8 +9,7 @@ which is why the guard exists.
 from __future__ import annotations
 
 PREFIX_BLOCK = (
-    "PREFIX ngx: <https://nexusgraph.dev/ontology#>\n"
-    "PREFIX nxg: <https://nexusgraph.dev/data/>\n"
+    "PREFIX ngx: <https://nexusgraph.dev/ontology#>\nPREFIX nxg: <https://nexusgraph.dev/data/>\n"
 )
 
 
@@ -23,7 +22,8 @@ def compounds_of_trial(trial_id: str) -> str:
     return PREFIX_BLOCK + (
         f"SELECT ?compound ?name WHERE {{ "
         f"<{_uri(trial_id)}> ngx:TRIAL_USES_COMPOUND ?compound . "
-        f"?compound ngx:name ?name }} ORDER BY ?compound")
+        f"?compound ngx:name ?name }} ORDER BY ?compound"
+    )
 
 
 def products_of_trial(trial_id: str) -> str:
@@ -31,7 +31,8 @@ def products_of_trial(trial_id: str) -> str:
         f"SELECT DISTINCT ?product ?name WHERE {{ "
         f"<{_uri(trial_id)}> ngx:TRIAL_USES_COMPOUND ?compound . "
         f"?product ngx:PRODUCT_DERIVED_FROM ?compound . "
-        f"?product ngx:name ?name }} ORDER BY ?product")
+        f"?product ngx:name ?name }} ORDER BY ?product"
+    )
 
 
 def documents_mentioning(entity_ids: list[str]) -> str:
@@ -40,7 +41,8 @@ def documents_mentioning(entity_ids: list[str]) -> str:
         f"SELECT DISTINCT ?document ?title WHERE {{ "
         f"?document ngx:DOCUMENT_MENTIONS ?e . "
         f"FILTER(?e IN ({uris})) "
-        f"?document ngx:title ?title }} ORDER BY ?document")
+        f"?document ngx:title ?title }} ORDER BY ?document"
+    )
 
 
 def documents_mentioning_compounds_of_trial(trial_id: str) -> str:
@@ -49,7 +51,8 @@ def documents_mentioning_compounds_of_trial(trial_id: str) -> str:
         f"SELECT DISTINCT ?document ?title ?compound WHERE {{ "
         f"<{_uri(trial_id)}> ngx:TRIAL_USES_COMPOUND ?compound . "
         f"?document ngx:DOCUMENT_MENTIONS ?compound . "
-        f"?document ngx:title ?title }} ORDER BY ?document")
+        f"?document ngx:title ?title }} ORDER BY ?document"
+    )
 
 
 def delayed_milestones_with_trials() -> str:
@@ -58,7 +61,8 @@ def delayed_milestones_with_trials() -> str:
         "?milestone ngx:dueDate ?due . "
         "?milestone ngx:completedDate ?completed . "
         "FILTER(?completed > ?due) "
-        "?trial ngx:TRIAL_HAS_MILESTONE ?milestone } ORDER BY ?trial")
+        "?trial ngx:TRIAL_HAS_MILESTONE ?milestone } ORDER BY ?trial"
+    )
 
 
 def products_of_delayed_trials() -> str:
@@ -70,7 +74,8 @@ def products_of_delayed_trials() -> str:
         "?trial ngx:TRIAL_HAS_MILESTONE ?milestone . "
         "?trial ngx:TRIAL_USES_COMPOUND ?compound . "
         "?product ngx:PRODUCT_DERIVED_FROM ?compound . "
-        "?product ngx:name ?name } ORDER BY ?product")
+        "?product ngx:name ?name } ORDER BY ?product"
+    )
 
 
 def safety_events_at_site(site_id: str) -> str:
@@ -78,14 +83,16 @@ def safety_events_at_site(site_id: str) -> str:
         f"SELECT ?event ?severity ?reported WHERE {{ "
         f"?event ngx:SAFETY_EVENT_AT_SITE <{_uri(site_id)}> . "
         f"?event ngx:severity ?severity . "
-        f"?event ngx:reportedAt ?reported }} ORDER BY DESC(?reported)")
+        f"?event ngx:reportedAt ?reported }} ORDER BY DESC(?reported)"
+    )
 
 
 def sites_of_trial(trial_id: str) -> str:
     return PREFIX_BLOCK + (
         f"SELECT ?site ?name WHERE {{ "
         f"<{_uri(trial_id)}> ngx:TRIAL_HAS_SITE ?site . "
-        f"?site ngx:name ?name }} ORDER BY ?site")
+        f"?site ngx:name ?name }} ORDER BY ?site"
+    )
 
 
 def compounds_with_safety_reports_and_sites() -> str:
@@ -97,17 +104,19 @@ def compounds_with_safety_reports_and_sites() -> str:
         "?event ngx:SAFETY_EVENT_INVOLVES_COMPOUND ?compound . "
         "?trial ngx:TRIAL_USES_COMPOUND ?compound . "
         "?trial ngx:TRIAL_HAS_SITE ?site . "
-        "?site ngx:name ?name } ORDER BY ?site")
+        "?site ngx:name ?name } ORDER BY ?site"
+    )
 
 
 def entity_neighbours(entity_id: str) -> str:
     return PREFIX_BLOCK + (
-        f"SELECT ?p ?o WHERE {{ <{_uri(entity_id)}> ?p ?o }} "
-        f"ORDER BY ?p LIMIT 50")
+        f"SELECT ?p ?o WHERE {{ <{_uri(entity_id)}> ?p ?o }} ORDER BY ?p LIMIT 50"
+    )
 
 
 def trials_of_compound(compound_id: str) -> str:
     return PREFIX_BLOCK + (
         f"SELECT ?trial ?name WHERE {{ "
         f"?trial ngx:TRIAL_USES_COMPOUND <{_uri(compound_id)}> . "
-        f"?trial ngx:name ?name }} ORDER BY ?trial")
+        f"?trial ngx:name ?name }} ORDER BY ?trial"
+    )

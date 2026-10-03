@@ -101,9 +101,13 @@ def make_extractor(runtime: Runtime) -> Callable[..., object]:
         def factory_llm(resolver: EntityResolver) -> LLMAssistedExtractor:
             from nexusgraph.llm.base import make_llm_client
 
-            return LLMAssistedExtractor(make_llm_client(runtime.settings.llm),
-                                        resolver, runtime.settings.llm,
-                                        runtime.settings.limits.max_input_chars)
+            return LLMAssistedExtractor(
+                make_llm_client(runtime.settings.llm),
+                resolver,
+                runtime.settings.llm,
+                runtime.settings.limits.max_input_chars,
+            )
+
         return factory_llm
 
     from nexusgraph.ingestion.extraction import DeterministicExtractor
@@ -122,8 +126,9 @@ def generate_dataset(settings: Settings, seed: int = DEFAULT_SEED) -> dict:
     return manifest
 
 
-def bootstrap(settings: Settings, seed: int = DEFAULT_SEED,
-              regenerate: bool = True) -> IngestionReport:
+def bootstrap(
+    settings: Settings, seed: int = DEFAULT_SEED, regenerate: bool = True
+) -> IngestionReport:
     """Generate + ingest the synthetic dataset; the one-command setup path."""
     if regenerate:
         import shutil

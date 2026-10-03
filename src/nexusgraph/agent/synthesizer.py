@@ -79,12 +79,12 @@ class AnswerDraft:
 class DeterministicSynthesizer:
     """Evidence -> claims -> cited answer, with no model in the loop."""
 
-    def synthesize(self, request: SynthesisRequest,
-                   ledger: EvidenceLedger) -> AnswerDraft:
+    def synthesize(self, request: SynthesisRequest, ledger: EvidenceLedger) -> AnswerDraft:
         if request.question_type == "unanswerable":
             return _insufficient(
                 "the question asks about data this system does not model "
-                "(e.g. financials, demographics); refusing rather than guessing")
+                "(e.g. financials, demographics); refusing rather than guessing"
+            )
         if not ledger.items():
             return _insufficient("no tool returned any usable evidence")
 
@@ -100,26 +100,32 @@ class DeterministicSynthesizer:
 
         if not claims:
             return _insufficient(
-                "tools ran successfully but returned no evidence usable for a "
-                "grounded answer")
+                "tools ran successfully but returned no evidence usable for a grounded answer"
+            )
 
         answer = _compose_answer(request, claims)
         return AnswerDraft(answer=answer, claims=claims)
 
     # ------------------------------------------------------------------ SQL
-    def _claims_from_structured(self, request: SynthesisRequest,
-                                ledger: EvidenceLedger) -> list[Claim]:
+    def _claims_from_structured(
+        self, request: SynthesisRequest, ledger: EvidenceLedger
+    ) -> list[Claim]:
         claims: list[Claim] = []
         for outcome in request.outcomes:
-            if outcome.tool != "query_structured_data" \
-                    or not isinstance(outcome.result, StructuredQueryResult) \
-                    or outcome.status == "error" or outcome.table is None:
+            if (
+                outcome.tool != "query_structured_data"
+                or not isinstance(outcome.result, StructuredQueryResult)
+                or outcome.status == "error"
+                or outcome.table is None
+            ):
                 continue
             result = outcome.result
             table = outcome.table
-            if table in ("site_metrics_monthly",
-                         "site_metrics_region_monthly",
-                         "investigator_capacity_region_monthly"):
+            if table in (
+                "site_metrics_monthly",
+                "site_metrics_region_monthly",
+                "investigator_capacity_region_monthly",
+            ):
                 claims += self._trend_claims(table, result, ledger)
             elif table == "milestones":
                 claims += self._milestone_claims(table, result, ledger)
@@ -127,18 +133,22 @@ class DeterministicSynthesizer:
                 claims += self._row_listing_claims(table, result, ledger)
         return claims
 
-    def _trend_claims(self, table: str, result: StructuredQueryResult,
-                      ledger: EvidenceLedger) -> list[Claim]:
-        group_col = ("site_id" if table == "site_metrics_monthly" else "region_id")
+    def _trend_claims(
+        self, table: str, result: StructuredQueryResult, ledger: EvidenceLedger
+    ) -> list[Claim]:
+        group_col = "site_id" if table == "site_metrics_monthly" else "region_id"
         specs = {
             "site_metrics_monthly": [
                 ("sum_patients_enrolled", "patient enrolment"),
-                ("sum_operational_cost", "operational cost")],
+                ("sum_operational_cost", "operational cost"),
+            ],
             "site_metrics_region_monthly": [
                 ("total_patients_enrolled", "patient enrolment"),
-                ("total_operational_cost", "operational cost")],
+                ("total_operational_cost", "operational cost"),
+            ],
             "investigator_capacity_region_monthly": [
-                ("avg_capacity_index", "investigator capacity index")],
+                ("avg_capacity_index", "investigator capacity index")
+            ],
         }
         claims: list[Claim] = []
         for column, label in specs[table]:
@@ -149,52 +159,72 @@ class DeterministicSynthesizer:
                 evidence_ids = _sql_evidence_ids(ledger, table, group)
                 if not evidence_ids or ends is None:
                     continue
-                direction = {"increasing": "increasing", "decreasing": "decreasing",
-                             "flat": "approximately flat"}[movement]
-                claims.append(Claim(
-                    claim=(f"{label.capitalize()} for {group} is {direction} "
-                           f"({ends[0]:.0f} -> {ends[1]:.0f} across the "
-                           f"{len(points)} recorded months)."),
-                    evidence_ids=evidence_ids,
-                    confidence=round(min(1.0, 0.5 + abs(linear_slope(points)) * 0.1), 2),
-                ))
-        return claims[:_MAX_ROW_CLAIMS * 2]
+                direction = {
+                    "increasing": "increasing",
+                    "decreasing": "decreasing",
+                    "flat": "approximately flat",
+                }[movement]
+                claims.append(
+                    Claim(
+                        claim=(
+                            f"{label.capitalize()} for {group} is {direction} "
+                            f"({ends[0]:.0f} -> {ends[1]:.0f} across the "
+                            f"{len(points)} recorded months)."
+                        ),
+                        evidence_ids=evidence_ids,
+                        confidence=round(min(1.0, 0.5 + abs(linear_slope(points)) * 0.1), 2),
+                    )
+                )
+        return claims[: _MAX_ROW_CLAIMS * 2]
 
-    def _milestone_claims(self, table: str, result: StructuredQueryResult,
-                          ledger: EvidenceLedger) -> list[Claim]:
+    def _milestone_claims(
+        self, table: str, result: StructuredQueryResult, ledger: EvidenceLedger
+    ) -> list[Claim]:
         claims: list[Claim] = []
         for row in result.rows[:_MAX_ROW_CLAIMS]:
             due, completed = row.get("due_date"), row.get("completed_date")
             if due and completed and completed > due:
-                claims.append(Claim(
-                    claim=(f"Milestone {row.get('milestone_id')} of trial "
-                           f"{row.get('trial_id')} was completed late "
-                           f"(due {due}, completed {completed})."),
-                    evidence_ids=_sql_evidence_ids(ledger, table,
-                                                   str(row.get("milestone_id"))),
-                ))
-        delayed = sum(1 for row in result.rows
-                      if row.get("due_date") and row.get("completed_date")
-                      and str(row["completed_date"]) > str(row["due_date"]))
+                claims.append(
+                    Claim(
+                        claim=(
+                            f"Milestone {row.get('milestone_id')} of trial "
+                            f"{row.get('trial_id')} was completed late "
+                            f"(due {due}, completed {completed})."
+                        ),
+                        evidence_ids=_sql_evidence_ids(ledger, table, str(row.get("milestone_id"))),
+                    )
+                )
+        delayed = sum(
+            1
+            for row in result.rows
+            if row.get("due_date")
+            and row.get("completed_date")
+            and str(row["completed_date"]) > str(row["due_date"])
+        )
         if delayed and len(result.rows) > _MAX_ROW_CLAIMS:
-            claims.append(Claim(
-                claim=f"{delayed} of {result.row_count} listed milestones were "
-                      f"completed after their due date.",
-                evidence_ids=_sql_evidence_ids(ledger, table),
-            ))
+            claims.append(
+                Claim(
+                    claim=f"{delayed} of {result.row_count} listed milestones were "
+                    f"completed after their due date.",
+                    evidence_ids=_sql_evidence_ids(ledger, table),
+                )
+            )
         return claims
 
-    def _row_listing_claims(self, table: str, result: StructuredQueryResult,
-                            ledger: EvidenceLedger) -> list[Claim]:
+    def _row_listing_claims(
+        self, table: str, result: StructuredQueryResult, ledger: EvidenceLedger
+    ) -> list[Claim]:
         if not result.rows:
             return []
-        preview = "; ".join(
-            json.dumps(row, default=str)[:120] for row in result.rows[:3])
-        return [Claim(
-            claim=(f"The {table} table returned {result.row_count} row(s); "
-                   f"first rows: {preview}."),
-            evidence_ids=_sql_evidence_ids(ledger, table),
-        )]
+        preview = "; ".join(json.dumps(row, default=str)[:120] for row in result.rows[:3])
+        return [
+            Claim(
+                claim=(
+                    f"The {table} table returned {result.row_count} row(s); first rows: {preview}."
+                ),
+                evidence_ids=_sql_evidence_ids(ledger, table),
+            )
+        ]
 
     # ---------------------------------------------------------------- SPARQL
     def _claims_from_sparql(self, ledger: EvidenceLedger) -> list[Claim]:
@@ -207,19 +237,30 @@ class DeterministicSynthesizer:
         if bindings:
             ids = _collect_ids(bindings)
             if ids:
-                claims.append(Claim(
-                    claim=("The knowledge graph links the following entities: "
-                           + ", ".join(sorted(ids)[:_MAX_LISTED]) + "."),
-                    evidence_ids=[e.evidence_id for e in bindings],
-                ))
+                claims.append(
+                    Claim(
+                        claim=(
+                            "The knowledge graph links the following entities: "
+                            + ", ".join(sorted(ids)[:_MAX_LISTED])
+                            + "."
+                        ),
+                        evidence_ids=[e.evidence_id for e in bindings],
+                    )
+                )
         if entity_evidence:
-            claims.append(Claim(
-                claim=("Entity lookup returned: "
-                       + "; ".join(f"{e.source_id}: "
-                                   f"{(e.snippet or e.source_id)[:160]}"
-                                   for e in entity_evidence[:_MAX_LISTED]) + "."),
-                evidence_ids=[e.evidence_id for e in entity_evidence],
-            ))
+            claims.append(
+                Claim(
+                    claim=(
+                        "Entity lookup returned: "
+                        + "; ".join(
+                            f"{e.source_id}: {(e.snippet or e.source_id)[:160]}"
+                            for e in entity_evidence[:_MAX_LISTED]
+                        )
+                        + "."
+                    ),
+                    evidence_ids=[e.evidence_id for e in entity_evidence],
+                )
+            )
         return claims
 
     # ------------------------------------------------------------- documents
@@ -231,11 +272,12 @@ class DeterministicSynthesizer:
                 continue
             seen_docs.add(evidence.source_id)
             snippet = (evidence.snippet or "").strip()
-            claims.append(Claim(
-                claim=(f"Document {evidence.source_id} states: "
-                       f"\"{snippet[:200]}\""),
-                evidence_ids=[evidence.evidence_id],
-            ))
+            claims.append(
+                Claim(
+                    claim=(f'Document {evidence.source_id} states: "{snippet[:200]}"'),
+                    evidence_ids=[evidence.evidence_id],
+                )
+            )
             if len(seen_docs) >= _MAX_DOC_CLAIMS:
                 break
         return claims
@@ -255,17 +297,19 @@ class DeterministicSynthesizer:
                 sql_ids.setdefault(token, []).append(evidence.evidence_id)
         rdf_ids: dict[str, list[str]] = {}
         for evidence in ledger.by_source_type(SourceType.rdf):
-            text = " ".join(filter(None, (evidence.location, evidence.snippet,
-                                          evidence.uri)))
+            text = " ".join(filter(None, (evidence.location, evidence.snippet, evidence.uri)))
             for token in _ID_TOKEN.findall(text):
                 rdf_ids.setdefault(token, []).append(evidence.evidence_id)
         overlap = sorted(set(sql_ids) & set(rdf_ids))
         if not overlap:
             return None
         return Claim(
-            claim=("Cross-source link: " + ", ".join(overlap[:_MAX_LISTED])
-                   + " appear in both the structured metrics and the "
-                     "knowledge-graph results."),
+            claim=(
+                "Cross-source link: "
+                + ", ".join(overlap[:_MAX_LISTED])
+                + " appear in both the structured metrics and the "
+                "knowledge-graph results."
+            ),
             evidence_ids=sorted(set(sql_ids[overlap[0]]) | set(rdf_ids[overlap[0]])),
         )
 
@@ -278,8 +322,7 @@ class LLMSynthesizer:
         self._fallback = DeterministicSynthesizer()
         self.last_usage: Usage | None = None  # usage of the last synthesis call
 
-    def synthesize(self, request: SynthesisRequest,
-                   ledger: EvidenceLedger) -> AnswerDraft:
+    def synthesize(self, request: SynthesisRequest, ledger: EvidenceLedger) -> AnswerDraft:
         evidence = ledger.items()
         if request.question_type == "unanswerable" or not evidence:
             return self._fallback.synthesize(request, ledger)
@@ -291,12 +334,21 @@ class LLMSynthesizer:
             logger.warning("LLM synthesis failed (%s); falling back", exc)
         return self._fallback.synthesize(request, ledger)
 
-    def _llm_synthesize(self, request: SynthesisRequest,
-                        evidence: list[Evidence]) -> AnswerDraft | None:
+    def _llm_synthesize(
+        self, request: SynthesisRequest, evidence: list[Evidence]
+    ) -> AnswerDraft | None:
         evidence_json = json.dumps(
-            [{"id": e.evidence_id, "source": e.source_id, "location": e.location,
-              "snippet": e.snippet} for e in evidence],
-            ensure_ascii=False)
+            [
+                {
+                    "id": e.evidence_id,
+                    "source": e.source_id,
+                    "location": e.location,
+                    "snippet": e.snippet,
+                }
+                for e in evidence
+            ],
+            ensure_ascii=False,
+        )
         prompt = (
             "You are the synthesis step of a grounded GraphRAG agent.\n"
             f"QUESTION ({request.question_type}): {request.question}\n\n"
@@ -306,20 +358,26 @@ class LLMSynthesizer:
             "- Cite in the answer text with [1]-style markers, where the number "
             "is the position (1-based) of the evidence item in the list.\n"
             "- Do not invent facts, numbers or citations. If the evidence is "
-            "insufficient, set \"insufficient\": true.\n"
-            "Respond ONLY with JSON: {\"answer\": str, \"claims\": "
-            "[{\"claim\": str, \"evidence_ids\": [str]}], \"insufficient\": bool,"
-            " \"insufficient_reason\": str|null}")
-        response = self._llm.complete(CompletionRequest(
-            messages=[ChatMessage(role="user", content=prompt)],
-            task="synthesize", json_mode=True,
-            max_tokens=1024))
+            'insufficient, set "insufficient": true.\n'
+            'Respond ONLY with JSON: {"answer": str, "claims": '
+            '[{"claim": str, "evidence_ids": [str]}], "insufficient": bool,'
+            ' "insufficient_reason": str|null}'
+        )
+        response = self._llm.complete(
+            CompletionRequest(
+                messages=[ChatMessage(role="user", content=prompt)],
+                task="synthesize",
+                json_mode=True,
+                max_tokens=1024,
+            )
+        )
         self.last_usage = response.usage
         payload = extract_json_object(response.text)
         return self._validate(payload, evidence, request)
 
-    def _validate(self, payload: dict[str, Any], evidence: list[Evidence],
-                  request: SynthesisRequest) -> AnswerDraft | None:
+    def _validate(
+        self, payload: dict[str, Any], evidence: list[Evidence], request: SynthesisRequest
+    ) -> AnswerDraft | None:
         answer = str(payload.get("answer", "")).strip()
         if not answer:
             return None
@@ -335,21 +393,27 @@ class LLMSynthesizer:
                 logger.warning("dropped %d invalid evidence id(s) on a claim", dropped)
             if not text:
                 continue
-            claims.append(Claim(claim=text, evidence_ids=ids,
-                                unsupported=not ids))
+            claims.append(Claim(claim=text, evidence_ids=ids, unsupported=not ids))
         if payload.get("insufficient") or not claims:
-            reason = payload.get("insufficient_reason") \
-                or "the model judged the evidence insufficient"
-            return AnswerDraft(answer=answer, claims=claims, insufficient=True,
-                               insufficient_reason=str(reason), synthesized_by="llm")
+            reason = (
+                payload.get("insufficient_reason") or "the model judged the evidence insufficient"
+            )
+            return AnswerDraft(
+                answer=answer,
+                claims=claims,
+                insufficient=True,
+                insufficient_reason=str(reason),
+                synthesized_by="llm",
+            )
         # Citation markers in the text must point at real positions.
         answer = _strip_bad_markers(answer, len(evidence))
         return AnswerDraft(answer=answer, claims=claims, synthesized_by="llm")
 
 
-def make_synthesizer(llm_provider: str,
-                     llm_client: LLMClient | None = None,
-                     ) -> DeterministicSynthesizer | LLMSynthesizer:
+def make_synthesizer(
+    llm_provider: str,
+    llm_client: LLMClient | None = None,
+) -> DeterministicSynthesizer | LLMSynthesizer:
     if llm_provider == "openai-compatible" and llm_client is not None:
         return LLMSynthesizer(llm_client)
     return DeterministicSynthesizer()
@@ -358,13 +422,20 @@ def make_synthesizer(llm_provider: str,
 # --------------------------------------------------------------------- helpers
 def _insufficient(reason: str) -> AnswerDraft:
     return AnswerDraft(
-        answer=("I could not answer this question from the available data: "
-                + reason + " No claims are made."),
-        claims=[], insufficient=True, insufficient_reason=reason)
+        answer=(
+            "I could not answer this question from the available data: "
+            + reason
+            + " No claims are made."
+        ),
+        claims=[],
+        insufficient=True,
+        insufficient_reason=reason,
+    )
 
 
-def _series(rows: list[dict], group_col: str, x_col: str,
-            y_col: str) -> dict[str, list[tuple[float, float]]]:
+def _series(
+    rows: list[dict], group_col: str, x_col: str, y_col: str
+) -> dict[str, list[tuple[float, float]]]:
     series: dict[str, list[tuple[float, float]]] = {}
     for row in rows:
         group = str(row.get(group_col, ""))
@@ -382,8 +453,7 @@ def _series(rows: list[dict], group_col: str, x_col: str,
     return series
 
 
-def _sql_evidence_ids(ledger: EvidenceLedger, table: str,
-                      *contains: str) -> list[str]:
+def _sql_evidence_ids(ledger: EvidenceLedger, table: str, *contains: str) -> list[str]:
     ids = []
     for evidence in ledger.by_source_type(SourceType.sql):
         if evidence.source_id != f"sql:{table}":
@@ -406,6 +476,7 @@ def _strip_bad_markers(answer: str, evidence_count: int) -> str:
     def _sub(match: re.Match) -> str:
         position = int(match.group(1))
         return match.group(0) if 1 <= position <= evidence_count else ""
+
     return _CITATION_MARK.sub(_sub, answer).strip()
 
 
@@ -414,9 +485,11 @@ def _compose_answer(request: SynthesisRequest, claims: list[Claim]) -> str:
     for claim in claims[:8]:
         lines.append(_mark(claim))
     if request.question_type in ("quantitative", "mixed"):
-        lines.append("(Trends are least-squares slopes over the retrieved "
-                     "monthly rows; only groups with retrieved rows are "
-                     "reported. See the citations for the underlying data.)")
+        lines.append(
+            "(Trends are least-squares slopes over the retrieved "
+            "monthly rows; only groups with retrieved rows are "
+            "reported. See the citations for the underlying data.)"
+        )
     return "\n\n".join(lines)
 
 

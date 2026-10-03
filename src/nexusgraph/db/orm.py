@@ -80,8 +80,9 @@ class TraceRow(Base):
     __tablename__ = "traces"
 
     trace_id: Mapped[str] = mapped_column(String(64), primary_key=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_utcnow,
-                                                 index=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=_utcnow, index=True
+    )
     question: Mapped[str | None] = mapped_column(Text, default=None)
     status: Mapped[str] = mapped_column(String(16), default="running")
     error: Mapped[str | None] = mapped_column(Text, default=None)

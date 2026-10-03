@@ -47,8 +47,12 @@ def bm25_scores(query: str, documents: Sequence[str]) -> list[float]:
             if term not in tf:
                 continue
             idf = math.log(1.0 + (len(documents) - df[term] + 0.5) / (df[term] + 0.5))
-            score += idf * tf[term] * (K1 + 1.0) / (
-                tf[term] + K1 * (1.0 - B + B * doc_len[i] / max(avg_len, 1.0)))
+            score += (
+                idf
+                * tf[term]
+                * (K1 + 1.0)
+                / (tf[term] + K1 * (1.0 - B + B * doc_len[i] / max(avg_len, 1.0)))
+            )
         scores[i] = score
 
     max_score = max(scores, default=0.0)

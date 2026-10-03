@@ -7,8 +7,10 @@ from nexusgraph.store.structured import run_structured_query
 def test_aggregate_enrolment_by_month(seeded_engine, limits) -> None:
     spec = QuerySpec(
         table="site_metrics_monthly",
-        filters=[FilterCondition(column="site_id", op="eq", value="S-1001"),
-                 FilterCondition(column="trial_id", op="eq", value="T-2001")],
+        filters=[
+            FilterCondition(column="site_id", op="eq", value="S-1001"),
+            FilterCondition(column="trial_id", op="eq", value="T-2001"),
+        ],
         aggregations=[Aggregation(func="sum", column="patients_enrolled")],
         group_by=["month"],
         order_by=[OrderBy(column="month", direction="asc")],

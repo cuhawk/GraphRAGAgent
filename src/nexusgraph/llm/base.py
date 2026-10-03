@@ -38,10 +38,11 @@ def estimate_tokens(text: str) -> int:
     return max(1, len(text) // ROUGH_CHARS_PER_TOKEN)
 
 
-def estimate_cost(settings: LLMSettings, prompt_tokens: int,
-                  completion_tokens: int) -> float:
-    cost = (prompt_tokens * settings.input_price_per_mtok
-            + completion_tokens * settings.output_price_per_mtok) / 1_000_000
+def estimate_cost(settings: LLMSettings, prompt_tokens: int, completion_tokens: int) -> float:
+    cost = (
+        prompt_tokens * settings.input_price_per_mtok
+        + completion_tokens * settings.output_price_per_mtok
+    ) / 1_000_000
     return round(cost, 6)
 
 
@@ -66,7 +67,7 @@ def extract_json_object(text: str) -> dict[str, Any]:
     end = cleaned.rfind("}")
     if start == -1 or end == -1 or end <= start:
         raise ValueError("no JSON object found in LLM response")
-    return json.loads(cleaned[start:end + 1])
+    return json.loads(cleaned[start : end + 1])
 
 
 class UsageTracker(BaseModel):

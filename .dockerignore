@@ -1,0 +1,12 @@
+.git
+.venv
+.mypy_cache
+.pytest_cache
+.ruff_cache
+data
+evals/results
+tests
+docs
+PLAN.md
+.env
+*.txt

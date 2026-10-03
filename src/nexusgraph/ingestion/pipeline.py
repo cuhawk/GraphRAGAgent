@@ -88,8 +88,9 @@ class IngestionPipeline:
         self._extractor_factory = extractor_factory
 
     # ------------------------------------------------------------------ full
-    def ingest_dataset(self, dataset_dir: pathlib.Path,
-                       ontology_path: pathlib.Path) -> IngestionReport:
+    def ingest_dataset(
+        self, dataset_dir: pathlib.Path, ontology_path: pathlib.Path
+    ) -> IngestionReport:
         report = IngestionReport()
         self._graph.load_ontology(ontology_path)
         data_graph = dataset_dir / "graph.ttl"
@@ -97,9 +98,9 @@ class IngestionPipeline:
             self._graph.load_data(data_graph)
 
         report.structured_rows += self._load_structured(dataset_dir / "tables")
-        report.entities, report.relationships, report.merged_duplicates = \
-            self._load_entities(dataset_dir / "entities.csv",
-                                dataset_dir / "relationships.csv")
+        report.entities, report.relationships, report.merged_duplicates = self._load_entities(
+            dataset_dir / "entities.csv", dataset_dir / "relationships.csv"
+        )
 
         aliases_path = dataset_dir / "aliases.json"
         aliases: dict[str, str] = {}
@@ -112,7 +113,8 @@ class IngestionPipeline:
         extractor = self._extractor_factory(resolver)
         doc_meta = self._load_sidecar_metadata(dataset_dir / "documents_index.json")
         report.documents, report.chunks, report.mention_triples = self._ingest_documents(
-            dataset_dir / "documents", resolver, extractor, doc_meta, report)
+            dataset_dir / "documents", resolver, extractor, doc_meta, report
+        )
         return report
 
     @staticmethod
@@ -124,11 +126,15 @@ class IngestionPipeline:
             entries = json.loads(index_path.read_text(encoding="utf-8"))
         except json.JSONDecodeError:
             return {}
-        return {entry["filename"]: {
-            "title": entry.get("title") or "",
-            "document_date": entry.get("document_date") or "",
-            "doc_id": entry.get("doc_id") or "",
-        } for entry in entries if entry.get("filename")}
+        return {
+            entry["filename"]: {
+                "title": entry.get("title") or "",
+                "document_date": entry.get("document_date") or "",
+                "doc_id": entry.get("doc_id") or "",
+            }
+            for entry in entries
+            if entry.get("filename")
+        }
 
     # -------------------------------------------------------------- structured
     def _load_structured(self, tables_dir: pathlib.Path) -> int:
@@ -154,26 +160,35 @@ class IngestionPipeline:
         return rows_loaded
 
     # ---------------------------------------------------------------- entities
-    def _load_entities(self, entities_csv: pathlib.Path,
-                       relationships_csv: pathlib.Path) -> tuple[int, int, int]:
+    def _load_entities(
+        self, entities_csv: pathlib.Path, relationships_csv: pathlib.Path
+    ) -> tuple[int, int, int]:
         entities: list[Entity] = []
         with entities_csv.open(encoding="utf-8", newline="") as fh:
             for row in csv.DictReader(fh):
-                entities.append(Entity(
-                    id=row["id"], type=row["type"], name=row["name"],
-                    description=row["description"] or None,
-                    source_ids=[_DATASET_SOURCE],
-                ))
+                entities.append(
+                    Entity(
+                        id=row["id"],
+                        type=row["type"],
+                        name=row["name"],
+                        description=row["description"] or None,
+                        source_ids=[_DATASET_SOURCE],
+                    )
+                )
         entities, merges = dedupe_entities(entities)
         self._entities.upsert_entities(entities)
 
         relationships: list[Relationship] = []
         with relationships_csv.open(encoding="utf-8", newline="") as fh:
             for row in csv.DictReader(fh):
-                relationships.append(Relationship(
-                    source_id=row["source_id"], target_id=row["target_id"],
-                    relation=row["relation"], source_ids=[_DATASET_SOURCE],
-                ))
+                relationships.append(
+                    Relationship(
+                        source_id=row["source_id"],
+                        target_id=row["target_id"],
+                        relation=row["relation"],
+                        source_ids=[_DATASET_SOURCE],
+                    )
+                )
         self._entities.upsert_relationships(relationships)
         return len(entities), len(relationships), len(merges)
 
@@ -217,31 +232,39 @@ class IngestionPipeline:
                     ordinal=ordinal,
                     text=chunk,
                     entity_ids=result.entity_ids,
-                    metadata={"provenance": {"source_id": doc_id,
-                                             "location": f"{doc_id}#chunk-{ordinal:04d}"}},
+                    metadata={
+                        "provenance": {
+                            "source_id": doc_id,
+                            "location": f"{doc_id}#chunk-{ordinal:04d}",
+                        }
+                    },
                     embedding=embedding,
                 )
-                for ordinal, (chunk, embedding) in enumerate(zip(chunks, embeddings,
-                                                                 strict=True), start=1)
+                for ordinal, (chunk, embedding) in enumerate(
+                    zip(chunks, embeddings, strict=True), start=1
+                )
             ]
 
-            self._documents.upsert_document(DocumentMeta(
-                id=doc_id, title=title, content_type=content_type,
-                source_path=str(path), text=text,
-                metadata={
-                    **meta,
-                    "document_id": doc_id,
-                    "mentions": result.entity_ids,
-                    "extraction_method": result.method,
-                    "provenance": {"source_id": _DATASET_SOURCE, "location": str(path)},
-                },
-            ))
+            self._documents.upsert_document(
+                DocumentMeta(
+                    id=doc_id,
+                    title=title,
+                    content_type=content_type,
+                    source_path=str(path),
+                    text=text,
+                    metadata={
+                        **meta,
+                        "document_id": doc_id,
+                        "mentions": result.entity_ids,
+                        "extraction_method": result.method,
+                        "provenance": {"source_id": _DATASET_SOURCE, "location": str(path)},
+                    },
+                )
+            )
             self._documents.replace_chunks(doc_id, chunk_models)
 
-            uris = [entity_uri(*e.split(":", 1)) for e in result.entity_ids
-                    if ":" in e]
-            self._graph.add_document_entity(
-                doc_id, title, content_type, document_date, uris)
+            uris = [entity_uri(*e.split(":", 1)) for e in result.entity_ids if ":" in e]
+            self._graph.add_document_entity(doc_id, title, content_type, document_date, uris)
             doc_count += 1
             chunk_count += len(chunk_models)
             mention_count += len(uris)

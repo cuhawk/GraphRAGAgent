@@ -93,7 +93,9 @@ class _OtelBridge:
             from opentelemetry.sdk.trace.export import BatchSpanProcessor
 
             provider = TracerProvider(resource=Resource({"service.name": "nexusgraph"}))
-            provider.add_span_processor(BatchSpanProcessor(OTLPSpanExporter(endpoint=otlp_endpoint)))
+            provider.add_span_processor(
+                BatchSpanProcessor(OTLPSpanExporter(endpoint=otlp_endpoint))
+            )
             trace.set_tracer_provider(provider)
             self._tracer = trace.get_tracer("nexusgraph")
         except Exception as exc:  # pragma: no cover - depends on optional env
@@ -179,13 +181,15 @@ def time_ns() -> int:
 
 
 def _safe_attrs(attrs: dict[str, Any]) -> dict[str, Any]:
-    return {k: (str(v)[:400] if not isinstance(v, (int, float, bool)) else v)
-            for k, v in attrs.items()}
+    return {
+        k: (str(v)[:400] if not isinstance(v, (int, float, bool)) else v) for k, v in attrs.items()
+    }
 
 
 @contextmanager
-def _otel_span(otel: _OtelBridge | None, name: str, trace_id: str,
-               attributes: dict[str, Any]) -> Iterator[None]:
+def _otel_span(
+    otel: _OtelBridge | None, name: str, trace_id: str, attributes: dict[str, Any]
+) -> Iterator[None]:
     if otel is None:
         yield
         return

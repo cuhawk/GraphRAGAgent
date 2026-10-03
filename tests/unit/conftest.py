@@ -22,8 +22,9 @@ def limits() -> LimitsSettings:
 
 @pytest.fixture()
 def engine(tmp_path: Path) -> Iterator[Engine]:
-    settings = Settings(data_dir=tmp_path, database_url=f"sqlite:///{tmp_path}/test.db",
-                        _env_file=None)
+    settings = Settings(
+        data_dir=tmp_path, database_url=f"sqlite:///{tmp_path}/test.db", _env_file=None
+    )
     eng = create_engine_for(settings)
     init_schema(eng, settings)
     yield eng

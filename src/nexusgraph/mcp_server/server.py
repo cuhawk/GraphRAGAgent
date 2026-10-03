@@ -31,19 +31,23 @@ from nexusgraph.tools.registry import REGISTRY
 logger = get_logger("mcp_server")
 
 _DESCRIPTIONS = {
-    "search_documents": ("Hybrid semantic search over the document corpus. "
-                         "Returns chunks with scores."),
-    "run_sparql": ("Run a read-only SPARQL SELECT/ASK query against the RDF "
-                   "knowledge graph. PREFIXES: ngx: "
-                   "<https://nexusgraph.dev/ontology#>, nxg: "
-                   "<https://nexusgraph.dev/data/>. Guarded: SELECT/ASK only."),
-    "query_structured_data": ("Run a typed aggregate/select over relational "
-                              "tables via a QuerySpec dict (table, select, "
-                              "filters, aggregations, group_by, order_by, "
-                              "limit). Compiled to parameterised SQL."),
+    "search_documents": (
+        "Hybrid semantic search over the document corpus. Returns chunks with scores."
+    ),
+    "run_sparql": (
+        "Run a read-only SPARQL SELECT/ASK query against the RDF "
+        "knowledge graph. PREFIXES: ngx: "
+        "<https://nexusgraph.dev/ontology#>, nxg: "
+        "<https://nexusgraph.dev/data/>. Guarded: SELECT/ASK only."
+    ),
+    "query_structured_data": (
+        "Run a typed aggregate/select over relational "
+        "tables via a QuerySpec dict (table, select, "
+        "filters, aggregations, group_by, order_by, "
+        "limit). Compiled to parameterised SQL."
+    ),
     "get_entity": "Fetch one knowledge-graph entity by id with relationships.",
-    "get_relationships": ("List relationships of an entity, optionally "
-                          "filtered by relation name."),
+    "get_relationships": ("List relationships of an entity, optionally filtered by relation name."),
     "retrieve_document": "Fetch a full document (bounded text) by id.",
 }
 
@@ -66,17 +70,20 @@ def create_server(settings: Settings | None = None) -> MCPServer:
 
     mcp: MCPServer = MCPServer(
         name="nexusgraph",
-        instructions=("Read-only GraphRAG tools over a synthetic "
-                      "life-sciences knowledge graph: SPARQL, typed SQL, "
-                      "hybrid document retrieval and entity lookup. All "
-                      "answers should cite the returned source ids."),
+        instructions=(
+            "Read-only GraphRAG tools over a synthetic "
+            "life-sciences knowledge graph: SPARQL, typed SQL, "
+            "hybrid document retrieval and entity lookup. All "
+            "answers should cite the returned source ids."
+        ),
     )
 
     def _execute(name: ToolName, payload: dict[str, Any]) -> str:
         spec = REGISTRY[name]
         args = spec.args_model.model_validate(payload)
-        ctx = ToolContext(runtime=runtime, limits=limits,
-                          budget=ToolBudget(limits.max_tool_calls_per_run))
+        ctx = ToolContext(
+            runtime=runtime, limits=limits, budget=ToolBudget(limits.max_tool_calls_per_run)
+        )
         result = spec.handler(ctx, args)
         text = json.dumps(_serialize(result), default=str, ensure_ascii=False)
         if len(text) > limits.max_result_bytes:
@@ -89,8 +96,9 @@ def create_server(settings: Settings | None = None) -> MCPServer:
 
     @mcp.tool(description=_DESCRIPTIONS["run_sparql"])
     def run_sparql(query: str, include_named_graphs: bool = False) -> str:
-        return _execute("run_sparql", {"query": query,
-                                       "include_named_graphs": include_named_graphs})
+        return _execute(
+            "run_sparql", {"query": query, "include_named_graphs": include_named_graphs}
+        )
 
     @mcp.tool(description=_DESCRIPTIONS["query_structured_data"])
     def query_structured_data(spec: dict[str, Any]) -> str:
@@ -102,8 +110,7 @@ def create_server(settings: Settings | None = None) -> MCPServer:
 
     @mcp.tool(description=_DESCRIPTIONS["get_relationships"])
     def get_relationships(entity_id: str, relation: str | None = None) -> str:
-        return _execute("get_relationships", {"entity_id": entity_id,
-                                              "relation": relation})
+        return _execute("get_relationships", {"entity_id": entity_id, "relation": relation})
 
     @mcp.tool(description=_DESCRIPTIONS["retrieve_document"])
     def retrieve_document(document_id: str) -> str:

@@ -36,18 +36,24 @@ class EntityStore:
         with Session(self._engine) as session:
             for rel in relationships:
                 exists = session.execute(
-                    select(RelationshipRow.id).where(
+                    select(RelationshipRow.id)
+                    .where(
                         RelationshipRow.source_id == rel.source_id,
                         RelationshipRow.target_id == rel.target_id,
                         RelationshipRow.relation == rel.relation,
-                    ).limit(1)
+                    )
+                    .limit(1)
                 ).scalar()
                 if exists is None:
-                    session.add(RelationshipRow(
-                        source_id=rel.source_id, target_id=rel.target_id,
-                        relation=rel.relation, properties=rel.properties,
-                        source_ids=rel.source_ids,
-                    ))
+                    session.add(
+                        RelationshipRow(
+                            source_id=rel.source_id,
+                            target_id=rel.target_id,
+                            relation=rel.relation,
+                            properties=rel.properties,
+                            source_ids=rel.source_ids,
+                        )
+                    )
             session.commit()
 
     # ------------------------------------------------------------------ read
@@ -60,28 +66,30 @@ class EntityStore:
         entity = self.get_entity(entity_id)
         if entity is None:
             return None
-        return EntityDetail(entity=entity,
-                            relationships=self.get_relationships(entity_id))
+        return EntityDetail(entity=entity, relationships=self.get_relationships(entity_id))
 
-    def get_relationships(self, entity_id: str, relation: str | None = None,
-                          ) -> list[Relationship]:
+    def get_relationships(
+        self,
+        entity_id: str,
+        relation: str | None = None,
+    ) -> list[Relationship]:
         with Session(self._engine) as session:
             query = select(RelationshipRow).where(
-                or_(RelationshipRow.source_id == entity_id,
-                    RelationshipRow.target_id == entity_id))
+                or_(RelationshipRow.source_id == entity_id, RelationshipRow.target_id == entity_id)
+            )
             if relation:
                 query = query.where(RelationshipRow.relation == relation)
             rows = session.execute(query).scalars().all()
         return [self._rel_from_row(r) for r in rows]
 
-    def find_entities(self, q: str | None = None, entity_type: str | None = None,
-                      limit: int = 25) -> list[Entity]:
+    def find_entities(
+        self, q: str | None = None, entity_type: str | None = None, limit: int = 25
+    ) -> list[Entity]:
         with Session(self._engine) as session:
             query = select(EntityRow)
             if q:
                 like = f"%{q}%"
-                query = query.where(or_(EntityRow.name.ilike(like),
-                                        EntityRow.id.ilike(like)))
+                query = query.where(or_(EntityRow.name.ilike(like), EntityRow.id.ilike(like)))
             if entity_type:
                 query = query.where(EntityRow.type == entity_type)
             rows = session.execute(query.order_by(EntityRow.id).limit(limit)).scalars().all()
@@ -92,11 +100,23 @@ class EntityStore:
         with Session(self._engine) as session:
             rows = session.execute(
                 select(EntityRow.name, EntityRow.id)
-                .where(EntityRow.type.in_([
-                    "trial", "site", "compound", "product", "company",
-                    "region", "country", "hospital", "investigator",
-                    "safetyevent", "milestone",
-                ]))
+                .where(
+                    EntityRow.type.in_(
+                        [
+                            "trial",
+                            "site",
+                            "compound",
+                            "product",
+                            "company",
+                            "region",
+                            "country",
+                            "hospital",
+                            "investigator",
+                            "safetyevent",
+                            "milestone",
+                        ]
+                    )
+                )
                 .order_by(EntityRow.id)
                 .limit(limit)
             ).all()
@@ -108,12 +128,21 @@ class EntityStore:
 
     @staticmethod
     def _entity_from_row(row: EntityRow) -> Entity:
-        return Entity(id=row.id, type=row.type, name=row.name,
-                      description=row.description, attributes=row.attributes or {},
-                      source_ids=row.source_ids or [])
+        return Entity(
+            id=row.id,
+            type=row.type,
+            name=row.name,
+            description=row.description,
+            attributes=row.attributes or {},
+            source_ids=row.source_ids or [],
+        )
 
     @staticmethod
     def _rel_from_row(row: RelationshipRow) -> Relationship:
-        return Relationship(source_id=row.source_id, target_id=row.target_id,
-                            relation=row.relation, properties=row.properties or {},
-                            source_ids=row.source_ids or [])
+        return Relationship(
+            source_id=row.source_id,
+            target_id=row.target_id,
+            relation=row.relation,
+            properties=row.properties or {},
+            source_ids=row.source_ids or [],
+        )

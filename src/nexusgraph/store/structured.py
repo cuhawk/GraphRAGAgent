@@ -30,33 +30,60 @@ _TXT = String(512)
 # table -> {column: sql type}. Types: "str" | "text" | "int" | "float".
 STRUCTURED_SCHEMA: dict[str, dict[str, str]] = {
     "trials": {
-        "trial_id": "str", "codename": "text", "phase": "str", "company_id": "str",
-        "status": "str", "start_date": "str", "planned_end_date": "str",
+        "trial_id": "str",
+        "codename": "text",
+        "phase": "str",
+        "company_id": "str",
+        "status": "str",
+        "start_date": "str",
+        "planned_end_date": "str",
     },
     "sites": {
-        "site_id": "str", "name": "text", "country_id": "str", "hospital_id": "str",
+        "site_id": "str",
+        "name": "text",
+        "country_id": "str",
+        "hospital_id": "str",
         "metric_pattern": "str",
     },
     "site_metrics_monthly": {
-        "site_id": "str", "trial_id": "str", "month": "str",
-        "patients_enrolled": "int", "operational_cost": "int",
+        "site_id": "str",
+        "trial_id": "str",
+        "month": "str",
+        "patients_enrolled": "int",
+        "operational_cost": "int",
     },
     "milestones": {
-        "milestone_id": "str", "trial_id": "str", "name": "text",
-        "due_date": "str", "completed_date": "str",
+        "milestone_id": "str",
+        "trial_id": "str",
+        "name": "text",
+        "due_date": "str",
+        "completed_date": "str",
     },
     "investigators": {
-        "investigator_id": "str", "name": "text", "site_id": "str", "seniority": "str",
+        "investigator_id": "str",
+        "name": "text",
+        "site_id": "str",
+        "seniority": "str",
     },
     "investigator_capacity_monthly": {
-        "investigator_id": "str", "month": "str", "capacity_index": "float",
+        "investigator_id": "str",
+        "month": "str",
+        "capacity_index": "float",
     },
     "safety_events": {
-        "event_id": "str", "site_id": "str", "trial_id": "str", "compound_id": "str",
-        "severity": "str", "reported_at": "str", "description": "text",
+        "event_id": "str",
+        "site_id": "str",
+        "trial_id": "str",
+        "compound_id": "str",
+        "severity": "str",
+        "reported_at": "str",
+        "description": "text",
     },
     "products": {
-        "product_id": "str", "name": "text", "company_id": "str", "compound_id": "str",
+        "product_id": "str",
+        "name": "text",
+        "company_id": "str",
+        "compound_id": "str",
     },
     "compounds": {"compound_id": "str", "name": "text", "target": "text"},
     "companies": {"company_id": "str", "name": "text", "hq_country_id": "str"},
@@ -64,11 +91,15 @@ STRUCTURED_SCHEMA: dict[str, dict[str, str]] = {
     "regions": {"region_id": "str", "name": "text"},
     "trials_compounds": {"trial_id": "str", "compound_id": "str"},
     "site_metrics_region_monthly": {
-        "region_id": "str", "month": "str",
-        "total_patients_enrolled": "int", "total_operational_cost": "int",
+        "region_id": "str",
+        "month": "str",
+        "total_patients_enrolled": "int",
+        "total_operational_cost": "int",
     },
     "investigator_capacity_region_monthly": {
-        "region_id": "str", "month": "str", "avg_capacity_index": "float",
+        "region_id": "str",
+        "month": "str",
+        "avg_capacity_index": "float",
     },
 }
 
@@ -83,8 +114,7 @@ def structured_metadata() -> MetaData:
     if _metadata is None:
         md = MetaData()
         for table, columns in STRUCTURED_SCHEMA.items():
-            Table(table, md, *[Column(col, _COLUMN_TYPES[typ])
-                               for col, typ in columns.items()])
+            Table(table, md, *[Column(col, _COLUMN_TYPES[typ]) for col, typ in columns.items()])
         _metadata = md
     return _metadata
 
@@ -106,8 +136,7 @@ def _coerce(value: Any, sql_type: str) -> Any:
 def insert_rows(engine: Engine, table: str, rows: list[dict[str, Any]]) -> int:
     """Bulk insert CSV-derived rows (used by ingestion only)."""
     columns = STRUCTURED_SCHEMA[table]
-    payload = [{col: _coerce(row.get(col), typ) for col, typ in columns.items()}
-               for row in rows]
+    payload = [{col: _coerce(row.get(col), typ) for col, typ in columns.items()} for row in rows]
     md = structured_metadata()
     with engine.begin() as conn:
         conn.execute(md.tables[table].insert(), payload)
@@ -124,15 +153,15 @@ def compile_query_spec(spec: QuerySpec) -> Select:
         for agg in spec.aggregations:
             if agg.func == "count":
                 label = "count" if agg.column is None else f"count_{agg.column}"
-                col_expr = func.count() if agg.column is None else func.count(
-                    table.c[agg.column])
+                col_expr = func.count() if agg.column is None else func.count(table.c[agg.column])
                 expr.append(col_expr.label(label))
             else:
                 # sqlguard rejects non-count aggregations without a column.
                 if agg.column is None:
                     raise ValueError(f"aggregation {agg.func} requires a column")
-                expr.append(getattr(func, agg.func)(table.c[agg.column])
-                            .label(f"{agg.func}_{agg.column}"))
+                expr.append(
+                    getattr(func, agg.func)(table.c[agg.column]).label(f"{agg.func}_{agg.column}")
+                )
     else:
         columns = list(spec.select) if spec.select else list(STRUCTURED_SCHEMA[spec.table])
         expr = [table.c[col] for col in columns]
@@ -159,8 +188,9 @@ def compile_query_spec(spec: QuerySpec) -> Select:
     for col in spec.group_by:
         query = query.group_by(table.c[col])
     for ob in spec.order_by:
-        query = query.order_by(table.c[ob.column].desc() if ob.direction == "desc"
-                               else table.c[ob.column].asc())
+        query = query.order_by(
+            table.c[ob.column].desc() if ob.direction == "desc" else table.c[ob.column].asc()
+        )
     return query.limit(spec.limit)
 
 
@@ -179,8 +209,9 @@ def run_structured_query(
     def _execute() -> list[dict[str, Any]]:
         with engine.connect() as conn:
             if engine.dialect.name == "postgresql":
-                conn.execute(text(
-                    f"SET LOCAL statement_timeout = {int(limits.sql_timeout_s * 1000)}"))
+                conn.execute(
+                    text(f"SET LOCAL statement_timeout = {int(limits.sql_timeout_s * 1000)}")
+                )
             result = conn.execute(query)
             return [dict(row._mapping) for row in result.fetchmany(limits.max_rows + 1)]
 
@@ -199,8 +230,11 @@ def run_structured_query(
         row_count=len(rows),
         truncated=truncated,
     )
-    logger.info("structured query ok", extra={
-        "tool": "query_structured_data",
-        "duration_ms": round((time.perf_counter() - started) * 1000, 2),
-    })
+    logger.info(
+        "structured query ok",
+        extra={
+            "tool": "query_structured_data",
+            "duration_ms": round((time.perf_counter() - started) * 1000, 2),
+        },
+    )
     return result

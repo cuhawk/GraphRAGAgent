@@ -15,9 +15,9 @@ from nexusgraph.runtime import bootstrap
 @pytest.fixture(scope="module")
 def settings(tmp_path_factory: pytest.TempPathFactory) -> Settings:
     tmp = tmp_path_factory.mktemp("api")
-    return Settings(data_dir=tmp,
-                    database_url=f"sqlite:///{tmp}/nexusgraph.db",
-                    redis_url=None, _env_file=None)
+    return Settings(
+        data_dir=tmp, database_url=f"sqlite:///{tmp}/nexusgraph.db", redis_url=None, _env_file=None
+    )
 
 
 @pytest.fixture(scope="module")
@@ -40,9 +40,9 @@ def test_index_served(client: TestClient):
 
 
 def test_query_endpoint_grounded(client: TestClient):
-    resp = client.post("/v1/query",
-                       json={"question": "How did patient enrolment change at "
-                                         "Site A over time?"})
+    resp = client.post(
+        "/v1/query", json={"question": "How did patient enrolment change at Site A over time?"}
+    )
     assert resp.status_code == 200
     answer = resp.json()
     assert answer["question_type"] in ("quantitative", "mixed")
@@ -50,8 +50,7 @@ def test_query_endpoint_grounded(client: TestClient):
     assert answer["claims"]
     for claim in answer["claims"]:
         for evidence_id in claim["evidence_ids"]:
-            assert any(e["evidence_id"] == evidence_id
-                       for e in answer["evidence"])
+            assert any(e["evidence_id"] == evidence_id for e in answer["evidence"])
 
 
 def test_query_endpoint_rejects_blank(client: TestClient):
@@ -60,9 +59,9 @@ def test_query_endpoint_rejects_blank(client: TestClient):
 
 
 def test_query_stream_emits_events_then_final(client: TestClient):
-    with client.stream("POST", "/v1/query/stream",
-                       json={"question": "Which trials have delayed milestones?"}
-                       ) as resp:
+    with client.stream(
+        "POST", "/v1/query/stream", json={"question": "Which trials have delayed milestones?"}
+    ) as resp:
         assert resp.status_code == 200
         assert "text/event-stream" in resp.headers["content-type"]
         events: list[str] = []
@@ -73,10 +72,8 @@ def test_query_stream_emits_events_then_final(client: TestClient):
             while "\n\n" in buffer:
                 block, buffer = buffer.split("\n\n", 1)
                 lines = block.splitlines()
-                event = next((line[7:] for line in lines
-                              if line.startswith("event: ")), None)
-                data = next((line[6:] for line in lines
-                             if line.startswith("data: ")), None)
+                event = next((line[7:] for line in lines if line.startswith("event: ")), None)
+                data = next((line[6:] for line in lines if line.startswith("data: ")), None)
                 if event:
                     events.append(event)
                     if event == "final":
@@ -130,17 +127,21 @@ def test_trace_endpoint_after_query(client: TestClient):
 
 def test_api_key_required_when_configured(tmp_path_factory: pytest.TempPathFactory):
     tmp = tmp_path_factory.mktemp("api_key")
-    settings = Settings(data_dir=tmp,
-                        database_url=f"sqlite:///{tmp}/nexusgraph.db",
-                        redis_url=None, api_key="sekrit", _env_file=None)
+    settings = Settings(
+        data_dir=tmp,
+        database_url=f"sqlite:///{tmp}/nexusgraph.db",
+        redis_url=None,
+        api_key="sekrit",
+        _env_file=None,
+    )
     bootstrap(settings, seed=42, regenerate=True)
     from fastapi.testclient import TestClient as TC
 
     with TC(create_app(settings)) as client:
-        assert client.post("/v1/query",
-                           json={"question": "anything"}).status_code == 401
+        assert client.post("/v1/query", json={"question": "anything"}).status_code == 401
         assert client.get("/v1/entities").status_code == 401
         assert client.get("/health").status_code == 200
-        ok = client.post("/v1/query", json={"question": "anything"},
-                         headers={"X-API-Key": "sekrit"})
+        ok = client.post(
+            "/v1/query", json={"question": "anything"}, headers={"X-API-Key": "sekrit"}
+        )
         assert ok.status_code == 200

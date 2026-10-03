@@ -1,9 +1,9 @@
 # NexusGraph eval report
 
-- Generated: 2026-10-03T16:20:25.999363+00:00
+- Generated: 2026-10-03T16:41:14.061397+00:00
 - Provider/model: `mock` / `mock-deterministic`
 - Dataset seed: 42 (synthetic corpus)
-- Git revision: 6f7c360
+- Git revision: 58d4f3f
 - Grading: deterministic only (see docs/EVALS.md)
 
 ## Overall
@@ -17,8 +17,8 @@
 | Citation recall (claims citing evidence) | 1.0 |
 | Unsupported-claim rate | 0.0 |
 | Tool-selection accuracy | 1.0 |
-| Average latency (ms) | 5.7421 |
-| p95 latency (ms) | 14.4 |
+| Average latency (ms) | 6.3842 |
+| p95 latency (ms) | 14.3 |
 | Total tokens | 0 |
 | Estimated cost (USD) | 0.0 |
 

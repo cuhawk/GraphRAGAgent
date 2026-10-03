@@ -58,8 +58,8 @@ def _validate_question(question: str, settings: Settings) -> str:
     if len(question) > settings.limits.max_input_chars:
         raise HTTPException(
             status_code=422,
-            detail=f"question exceeds the {settings.limits.max_input_chars}"
-                   "-character limit")
+            detail=f"question exceeds the {settings.limits.max_input_chars}-character limit",
+        )
     return question
 
 
@@ -74,15 +74,16 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app = FastAPI(
         title="NexusGraph",
         version="0.1.0",
-        description=("GraphRAG + Knowledge Graph Agent: grounded answers over "
-                     "RDF/SPARQL, structured SQL and hybrid document retrieval "
-                     "with citations and traces."),
+        description=(
+            "GraphRAG + Knowledge Graph Agent: grounded answers over "
+            "RDF/SPARQL, structured SQL and hybrid document retrieval "
+            "with citations and traces."
+        ),
     )
 
     def require_api_key(x_api_key: str | None = Header(default=None)) -> None:
         if settings.api_key and x_api_key != settings.api_key:
-            raise HTTPException(status_code=401,
-                                detail="invalid or missing API key")
+            raise HTTPException(status_code=401, detail="invalid or missing API key")
 
     v1_auth = [Depends(require_api_key)]
 
@@ -102,8 +103,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         return FileResponse(_STATIC_DIR / "index.html")
 
     # ----------------------------------------------------------------- query
-    @app.post("/v1/query", response_model=AgentAnswer,
-              dependencies=v1_auth)
+    @app.post("/v1/query", response_model=AgentAnswer, dependencies=v1_auth)
     def query(req: QueryRequest) -> AgentAnswer:
         question = _validate_question(req.question, settings)
         return orchestrator.run(question)
@@ -136,16 +136,14 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             try:
                 answer = await task
             except Exception as exc:
-                yield (f"event: error\ndata: "
-                       f"{json.dumps({'error': str(exc)})}\n\n")
+                yield (f"event: error\ndata: {json.dumps({'error': str(exc)})}\n\n")
                 return
             yield f"event: final\ndata: {answer.model_dump_json()}\n\n"
 
         return StreamingResponse(generator(), media_type="text/event-stream")
 
     # --------------------------------------------------------------- lookups
-    @app.get("/v1/entities", response_model=list[Entity],
-             dependencies=v1_auth)
+    @app.get("/v1/entities", response_model=list[Entity], dependencies=v1_auth)
     def list_entities(
         q: str | None = Query(default=None, max_length=200),
         type: str | None = Query(default=None, max_length=64),  # noqa: A002
@@ -153,8 +151,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     ) -> list[Entity]:
         return runtime.entities.find_entities(q=q, entity_type=type, limit=limit)
 
-    @app.get("/v1/entities/{entity_id}", response_model=EntityDetail,
-             dependencies=v1_auth)
+    @app.get("/v1/entities/{entity_id}", response_model=EntityDetail, dependencies=v1_auth)
     def get_entity(entity_id: str) -> EntityDetail:
         detail = runtime.entities.get_entity_detail(entity_id)
         if detail is None:
@@ -162,12 +159,12 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         return detail
 
     @app.get("/v1/documents", response_model=list[Any], dependencies=v1_auth)
-    def list_documents(limit: int = Query(default=50, ge=1, le=200),
-                       offset: int = Query(default=0, ge=0)) -> list[Any]:
+    def list_documents(
+        limit: int = Query(default=50, ge=1, le=200), offset: int = Query(default=0, ge=0)
+    ) -> list[Any]:
         return list(runtime.documents.list_documents(limit=limit, offset=offset))
 
-    @app.get("/v1/documents/{document_id}", response_model=DocumentDetail,
-             dependencies=v1_auth)
+    @app.get("/v1/documents/{document_id}", response_model=DocumentDetail, dependencies=v1_auth)
     def get_document(document_id: str) -> DocumentDetail:
         document = runtime.documents.get_document(document_id)
         if document is None:
@@ -176,14 +173,13 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         return DocumentDetail(document=document, chunk_count=len(chunks))
 
     # ---------------------------------------------------------------- traces
-    @app.get("/v1/traces", response_model=list[TraceRecord],
-             dependencies=v1_auth)
-    def list_traces(limit: int = Query(default=25, ge=1, le=100),
-                    ) -> list[TraceRecord]:
+    @app.get("/v1/traces", response_model=list[TraceRecord], dependencies=v1_auth)
+    def list_traces(
+        limit: int = Query(default=25, ge=1, le=100),
+    ) -> list[TraceRecord]:
         return runtime.trace_sink.list(limit=limit)
 
-    @app.get("/v1/traces/{trace_id}", response_model=TraceRecord,
-             dependencies=v1_auth)
+    @app.get("/v1/traces/{trace_id}", response_model=TraceRecord, dependencies=v1_auth)
     def get_trace(trace_id: str) -> TraceRecord:
         record = runtime.trace_sink.get(trace_id)
         if record is None:

@@ -30,8 +30,9 @@ class EntityResolver:
         self._normalized_to_id.setdefault(key, canonical)
 
     def resolve(self, surface: str) -> str | None:
-        return self._surface_to_id.get(surface) \
-            or self._normalized_to_id.get(normalize_name(surface))
+        return self._surface_to_id.get(surface) or self._normalized_to_id.get(
+            normalize_name(surface)
+        )
 
     def canonical_id(self, entity_id: str) -> str:
         """Idempotent: returns the canonical id for a surface or id."""

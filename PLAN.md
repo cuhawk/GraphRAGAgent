@@ -111,3 +111,58 @@ distributed deployment, GraphQL façade, streaming graph updates, real biomedica
 ---
 ## Phase log (updated at end of each phase)
 - 2026-10-02 — Phase 0 complete: scaffold, plan, uv project, license, git repo.
+- 2026-10-02 — Phases 1–7 complete: config/domain/tracing; synth generator (seed 42)
+  + ontology; graph store + SPARQL guard; vector/document/entity stores + hybrid
+  retrieval; SQL layer + sqlguard; LLM adapters (mock/openai-compatible); ingestion
+  pipeline with provenance (per-document named graphs). Bootstrap end-to-end green;
+  65 unit tests.
+- 2026-10-03 — Phases 8–9 complete: 7 typed guarded tools + registry + budgets;
+  evidence ledger; heuristic/LLM planners (intent-based); deterministic + LLM
+  synthesizers (trend claims via least-squares slopes, cross-source links,
+  strict citation validation); orchestrator with per-stage trace spans and final
+  citation re-verification. 96 tests; mypy strict-clean; ruff clean.
+- 2026-10-03 — Phase 11 (pulled forward) complete: read-only MCP server (stdio +
+  streamable-HTTP app), typed args from the same registry, bounded outputs,
+  same guards as the agent path.
+- 2026-10-03 — Phase 10 complete: FastAPI app (/v1/query, /v1/query/stream SSE,
+  entities/documents/traces, health/ready, optional X-API-Key), single-file UI
+  with streaming progress, citations, trace viewer, entity explorer. 106 tests.
+- 2026-10-03 — Phase 12 complete: eval framework (19 cases: retrieval/graph/sql/
+  multi_hop/mixed/unanswerable/adversarial) with deterministic graders and
+  `python -m evals.run`. First measured run: 19/19 success, retrieval recall 1.0,
+  citation precision/recall 1.0/1.0, unsupported-claim rate 0.0, tool-selection
+  accuracy 1.0 (mock provider, deterministic path). Evals surfaced and fixed real
+  agent gaps: local-id aliases, document-phrasing routing, 3-hop mention query,
+  missing region marts in the on-disk dataset.
+- 2026-10-03 — Phase 13 complete: security tests (SPARQL guard IRI/comment
+  scanner regression, parameterised-SQL injection inertness, oversized/non-scalar
+  filter rejection, tool-budget exhaustion, verify_claim fabrication refusal,
+  named-graph isolation, row caps). 116 tests green; mypy + ruff clean.
+- 2026-10-03 — Phase 14 complete: full README (12 sections, measured benchmark
+  table with honest scoping), ARCHITECTURE.md, docs/THREAT_MODEL.md,
+  docs/ONTOLOGY.md, docs/EVALS.md, CONTRIBUTING.md, SECURITY.md, .env.example,
+  Dockerfile, docker-compose.yml (postgres+pgvector+redis), Makefile,
+  .github/workflows/ci.yml, .dockerignore. YAML validated by parser; compose not
+  runtime-verified (Docker unavailable on the dev machine — flagged per the
+  risk register; CI validates on every push).
+- 2026-10-03 — Phase 15 complete: final verification pass (see closeout below).
+
+## 8. Closeout — definition of done
+
+| DoD item | Status |
+| --- | --- |
+| `docker compose up` works | Compose + Dockerfile written and YAML-validated; **not runtime-verified** (Docker not installed on dev machine). Local profile (`uv run nexusgraph bootstrap && uv run nexusgraph serve`) is verified end to end. |
+| Data generation + ingestion | `nexusgraph bootstrap` (seed 42, idempotent): 14 docs / 149 entities / 205 relationships / 1035 structured rows / 18 chunks / 84 mention triples. |
+| SPARQL queryable | GraphStore + guard; guarded SELECT/ASK over ontology + data + per-document mention graphs. |
+| Vector + SQL retrieval | Hybrid dense+BM25 retrieval; typed QuerySpec SQL over 15-table schema incl. region marts. |
+| Agent tool selection | Intent planner routes by question type; 1.0 tool-selection accuracy on eval run. |
+| Multi-source questions | Mixed-question path with cross-source claims (X1 case). |
+| Traceable citations | Ledger-only citations, orchestrator re-check, citation metrics 1.0/1.0 on eval run. |
+| MCP works | `nexusgraph mcp` (stdio) + HTTP app; server creation smoke-tested; 6 read-only tools. |
+| Eval suite runs | `python -m evals.run` → results JSON + report.md; 19/19 measured. |
+| Traces observable | `/v1/traces/{id}` + UI trace viewer; OTLP mirroring optional. |
+| Tests pass | 116 tests green (unit + integration); ruff + mypy clean. |
+| CI passes locally-equivalent | All CI jobs (ruff, mypy, pytest, evals) run green locally; services-based jobs run on push. |
+| No secrets | No credentials in repo; `.env.example` documents every knob; API key optional and off by default. |
+| README enables a new dev | 12 sections incl. quick start, API, evals, honest benchmark reading guide. |
+| Measured vs unmeasured separated | README/EVALS mark the committed run's scope (mock provider) and list everything NOT YET MEASURED. |

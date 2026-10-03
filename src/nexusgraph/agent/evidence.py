@@ -27,9 +27,18 @@ SNIPPET_CHARS = 280
 # Preferred key columns for the per-row evidence location; combined so that
 # grouped series rows (site_id + month) each get distinct, citable evidence.
 _ROW_KEY_COLUMNS = (
-    "site_id", "region_id", "trial_id", "compound_id", "investigator_id",
-    "milestone_id", "event_id", "product_id", "company_id", "country_id",
-    "month", "reported_at",
+    "site_id",
+    "region_id",
+    "trial_id",
+    "compound_id",
+    "investigator_id",
+    "milestone_id",
+    "event_id",
+    "product_id",
+    "company_id",
+    "country_id",
+    "month",
+    "reported_at",
 )
 
 
@@ -59,9 +68,16 @@ class EvidenceLedger:
     def by_source_type(self, source_type: SourceType) -> list[Evidence]:
         return [e for e in self._items if e.source_type == source_type]
 
-    def _add(self, source_id: str, source_type: SourceType, location: str, *,
-             snippet: str | None = None, uri: str | None = None,
-             confidence: float = 1.0) -> Evidence | None:
+    def _add(
+        self,
+        source_id: str,
+        source_type: SourceType,
+        location: str,
+        *,
+        snippet: str | None = None,
+        uri: str | None = None,
+        confidence: float = 1.0,
+    ) -> Evidence | None:
         key = (source_id, location)
         if key in self._seen or len(self._items) >= self._max:
             return None
@@ -95,27 +111,30 @@ class EvidenceLedger:
     def add_structured(self, result: StructuredQueryResult, table: str) -> list[Evidence]:
         added = []
         for row in result.rows[:MAX_EVIDENCE_PER_TOOL]:
-            added.append(self._add(
-                source_id=f"sql:{table}",
-                source_type=SourceType.sql,
-                location=f"{table}:{_row_key(row)}",
-                snippet=json.dumps(row, default=str)[:SNIPPET_CHARS],
-            ))
+            added.append(
+                self._add(
+                    source_id=f"sql:{table}",
+                    source_type=SourceType.sql,
+                    location=f"{table}:{_row_key(row)}",
+                    snippet=json.dumps(row, default=str)[:SNIPPET_CHARS],
+                )
+            )
         return [e for e in added if e]
 
     def add_sparql(self, result: SparqlResult) -> list[Evidence]:
         added = []
         for row in result.rows[:MAX_EVIDENCE_PER_TOOL]:
             uri = next((v for v in row.values() if v.startswith(_DATA_BASE)), None)
-            location = ", ".join(f"{k}={_short(v)}" for k, v in row.items()
-                                 if v)[:SNIPPET_CHARS]
-            added.append(self._add(
-                source_id=uri or f"sparql:{abs(hash(result.query)) % 10_000_000}",
-                source_type=SourceType.rdf,
-                location=location or "sparql-binding",
-                snippet=json.dumps(row, default=str)[:SNIPPET_CHARS],
-                uri=uri,
-            ))
+            location = ", ".join(f"{k}={_short(v)}" for k, v in row.items() if v)[:SNIPPET_CHARS]
+            added.append(
+                self._add(
+                    source_id=uri or f"sparql:{abs(hash(result.query)) % 10_000_000}",
+                    source_type=SourceType.rdf,
+                    location=location or "sparql-binding",
+                    snippet=json.dumps(row, default=str)[:SNIPPET_CHARS],
+                    uri=uri,
+                )
+            )
         return [e for e in added if e]
 
     def add_document(self, detail: DocumentDetail) -> Evidence | None:

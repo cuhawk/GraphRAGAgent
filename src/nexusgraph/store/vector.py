@@ -35,8 +35,12 @@ class ChunkFilter:
 
 
 class VectorIndex(Protocol):
-    def search(self, embedding: list[float], k: int, filters: ChunkFilter | None = None,
-               ) -> list[ScoredChunk]: ...
+    def search(
+        self,
+        embedding: list[float],
+        k: int,
+        filters: ChunkFilter | None = None,
+    ) -> list[ScoredChunk]: ...
     def refresh(self) -> int: ...
     def count(self) -> int: ...
 
@@ -56,8 +60,13 @@ class LocalVectorIndex:
 
         with self._engine.connect() as conn:
             rows = conn.execute(
-                select(ChunkRow.id, ChunkRow.document_id, ChunkRow.entity_ids,
-                       ChunkRow.embedding, DocumentRow.content_type)
+                select(
+                    ChunkRow.id,
+                    ChunkRow.document_id,
+                    ChunkRow.entity_ids,
+                    ChunkRow.embedding,
+                    DocumentRow.content_type,
+                )
                 .join(DocumentRow, ChunkRow.document_id == DocumentRow.id)
                 .where(ChunkRow.embedding.is_not(None))
             ).all()
@@ -77,8 +86,12 @@ class LocalVectorIndex:
     def count(self) -> int:
         return 0 if self._matrix is None else int(self._matrix.shape[0])
 
-    def search(self, embedding: list[float], k: int, filters: ChunkFilter | None = None,
-               ) -> list[ScoredChunk]:
+    def search(
+        self,
+        embedding: list[float],
+        k: int,
+        filters: ChunkFilter | None = None,
+    ) -> list[ScoredChunk]:
         if self._matrix is None or not self._ids:
             return []
         query = np.array(embedding, dtype=np.float32)
@@ -108,8 +121,7 @@ class LocalVectorIndex:
             return False
         if filters.content_types and content_type not in filters.content_types:
             return False
-        return not (filters.entity_ids
-                    and not (set(entity_ids) & set(filters.entity_ids)))
+        return not (filters.entity_ids and not (set(entity_ids) & set(filters.entity_ids)))
 
 
 class PgVectorIndex:
@@ -123,16 +135,23 @@ class PgVectorIndex:
 
     def count(self) -> int:
         with self._engine.connect() as conn:
-            row = conn.execute(text(
-                "SELECT count(*) FROM chunks WHERE embedding IS NOT NULL")).scalar()
+            row = conn.execute(
+                text("SELECT count(*) FROM chunks WHERE embedding IS NOT NULL")
+            ).scalar()
             return int(row or 0)
 
-    def search(self, embedding: list[float], k: int, filters: ChunkFilter | None = None,
-               ) -> list[ScoredChunk]:
+    def search(
+        self,
+        embedding: list[float],
+        k: int,
+        filters: ChunkFilter | None = None,
+    ) -> list[ScoredChunk]:
         vector_literal = "[" + ",".join(f"{x:.7g}" for x in embedding) + "]"
-        sql = ("SELECT chunks.id, 1 - (chunks.embedding <=> :vec) AS score "
-               "FROM chunks JOIN documents ON documents.id = chunks.document_id "
-               "WHERE chunks.embedding IS NOT NULL")
+        sql = (
+            "SELECT chunks.id, 1 - (chunks.embedding <=> :vec) AS score "
+            "FROM chunks JOIN documents ON documents.id = chunks.document_id "
+            "WHERE chunks.embedding IS NOT NULL"
+        )
         params: dict[str, object] = {"vec": vector_literal}
         if filters:
             if filters.document_ids:
@@ -143,8 +162,8 @@ class PgVectorIndex:
                 params["ctypes"] = list(filters.content_types)
             if filters.entity_ids:
                 ors = " OR ".join(
-                    f"chunks.entity_ids @> :ent_{i}::jsonb"
-                    for i in range(len(filters.entity_ids)))
+                    f"chunks.entity_ids @> :ent_{i}::jsonb" for i in range(len(filters.entity_ids))
+                )
                 sql += f" AND ({ors})"
                 for i, ent in enumerate(filters.entity_ids):
                     params[f"ent_{i}"] = f'["{ent}"]'

@@ -1,0 +1,52 @@
+# NexusGraph — full stack: PostgreSQL + pgvector, Redis, API/UI.
+# The `local` profile needs none of this; `docker compose up` runs the
+# `postgres` profile end to end (bootstrap happens automatically on start).
+services:
+  db:
+    image: pgvector/pgvector:pg16
+    environment:
+      POSTGRES_USER: nexusgraph
+      POSTGRES_PASSWORD: nexusgraph
+      POSTGRES_DB: nexusgraph
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U nexusgraph -d nexusgraph"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+
+  redis:
+    image: redis:7-alpine
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+
+  api:
+    build: .
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      NEXUSGRAPH_PROFILE: postgres
+      NEXUSGRAPH_DATABASE_URL: postgresql+psycopg://nexusgraph:nexusgraph@db:5432/nexusgraph
+      NEXUSGRAPH_REDIS_URL: redis://redis:6379/0
+      NEXUSGRAPH_BOOTSTRAP_ON_START: "true"
+      # NEXUSGRAPH_API_KEY: change-me
+      # NEXUSGRAPH_OTLP_ENDPOINT: http://tempo:4318/v1/traces
+      # NEXUSGRAPH_LLM__PROVIDER: openai-compatible
+      # NEXUSGRAPH_LLM__BASE_URL: https://api.example.com/v1
+      # NEXUSGRAPH_LLM__API_KEY: sk-...
+      # NEXUSGRAPH_LLM__MODEL: your-model-name
+    ports:
+      - "8000:8000"
+    volumes:
+      - app-data:/app/data
+
+volumes:
+  db-data:
+  app-data:

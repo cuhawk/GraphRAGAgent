@@ -28,7 +28,6 @@ def run_with_timeout(fn: Callable[[], Any], timeout_s: float) -> Any:
     try:
         return pool.submit(fn).result(timeout=timeout_s)
     except FuturesTimeoutError as exc:
-        raise ToolTimeoutError(
-            f"execution exceeded {timeout_s:.1f}s wall-clock budget") from exc
+        raise ToolTimeoutError(f"execution exceeded {timeout_s:.1f}s wall-clock budget") from exc
     finally:
         pool.shutdown(wait=False)

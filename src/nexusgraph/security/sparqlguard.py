@@ -98,7 +98,7 @@ def _strip_prologue(query: str) -> str:
         match = _PREFIX_RE.match(query) or _BASE_RE.match(query)
         if match is None:
             return query
-        query = query[match.end():]
+        query = query[match.end() :]
 
 
 def validate_sparql(query: str) -> str:
@@ -106,8 +106,7 @@ def validate_sparql(query: str) -> str:
     if not query or not query.strip():
         raise SparqlGuardError("empty SPARQL query")
     if len(query) > MAX_QUERY_CHARS:
-        raise SparqlGuardError(
-            f"SPARQL query too long ({len(query)} chars, max {MAX_QUERY_CHARS})")
+        raise SparqlGuardError(f"SPARQL query too long ({len(query)} chars, max {MAX_QUERY_CHARS})")
 
     stripped = _strip_comments(query)
     core = _strip_prologue(stripped)
@@ -117,7 +116,8 @@ def validate_sparql(query: str) -> str:
     if first_word is None or first_word.group(0).upper() not in ALLOWED_FORMS:
         found = first_word.group(0).upper() if first_word else "<none>"
         raise SparqlGuardError(
-            f"only {' / '.join(ALLOWED_FORMS)} queries are allowed, got: {found}")
+            f"only {' / '.join(ALLOWED_FORMS)} queries are allowed, got: {found}"
+        )
 
     for name, pattern in _FORBIDDEN_PATTERNS:
         match = pattern.search(stripped)

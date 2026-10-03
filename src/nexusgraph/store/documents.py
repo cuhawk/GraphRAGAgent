@@ -33,19 +33,34 @@ class DocumentStore:
             if row is None:
                 return None
             return DocumentMeta(
-                id=row.id, title=row.title, content_type=row.content_type,
-                source_path=row.source_path, text=row.text, metadata=row.doc_metadata,
+                id=row.id,
+                title=row.title,
+                content_type=row.content_type,
+                source_path=row.source_path,
+                text=row.text,
+                metadata=row.doc_metadata,
             )
 
     def list_documents(self, limit: int = 100, offset: int = 0) -> list[DocumentMeta]:
         with Session(self._engine) as session:
-            rows = session.execute(
-                select(DocumentRow).order_by(DocumentRow.id).limit(limit).offset(offset)
-            ).scalars().all()
-            return [DocumentMeta(
-                id=r.id, title=r.title, content_type=r.content_type,
-                source_path=r.source_path, text="", metadata=r.doc_metadata,
-            ) for r in rows]
+            rows = (
+                session.execute(
+                    select(DocumentRow).order_by(DocumentRow.id).limit(limit).offset(offset)
+                )
+                .scalars()
+                .all()
+            )
+            return [
+                DocumentMeta(
+                    id=r.id,
+                    title=r.title,
+                    content_type=r.content_type,
+                    source_path=r.source_path,
+                    text="",
+                    metadata=r.doc_metadata,
+                )
+                for r in rows
+            ]
 
     def delete_document(self, document_id: str) -> None:
         with Session(self._engine) as session:
@@ -58,11 +73,17 @@ class DocumentStore:
         with Session(self._engine) as session:
             session.execute(delete(ChunkRow).where(ChunkRow.document_id == document_id))
             for chunk in chunks:
-                session.add(ChunkRow(
-                    id=chunk.id, document_id=document_id, ordinal=chunk.ordinal,
-                    text=chunk.text, entity_ids=chunk.entity_ids,
-                    chunk_metadata=chunk.metadata, embedding=chunk.embedding,
-                ))
+                session.add(
+                    ChunkRow(
+                        id=chunk.id,
+                        document_id=document_id,
+                        ordinal=chunk.ordinal,
+                        text=chunk.text,
+                        entity_ids=chunk.entity_ids,
+                        chunk_metadata=chunk.metadata,
+                        embedding=chunk.embedding,
+                    )
+                )
             session.commit()
 
     def get_chunk(self, chunk_id: str) -> Chunk | None:
@@ -74,18 +95,23 @@ class DocumentStore:
         if not chunk_ids:
             return []
         with Session(self._engine) as session:
-            rows = session.execute(
-                select(ChunkRow).where(ChunkRow.id.in_(chunk_ids))
-            ).scalars().all()
+            rows = (
+                session.execute(select(ChunkRow).where(ChunkRow.id.in_(chunk_ids))).scalars().all()
+            )
         by_id = {r.id: self._chunk_from_row(r) for r in rows}
         return [by_id[cid] for cid in chunk_ids if cid in by_id]
 
     def chunks_for_document(self, document_id: str) -> list[Chunk]:
         with Session(self._engine) as session:
-            rows = session.execute(
-                select(ChunkRow).where(ChunkRow.document_id == document_id)
-                .order_by(ChunkRow.ordinal)
-            ).scalars().all()
+            rows = (
+                session.execute(
+                    select(ChunkRow)
+                    .where(ChunkRow.document_id == document_id)
+                    .order_by(ChunkRow.ordinal)
+                )
+                .scalars()
+                .all()
+            )
         return [self._chunk_from_row(r) for r in rows]
 
     def chunk_count(self) -> int:
@@ -99,7 +125,11 @@ class DocumentStore:
     @staticmethod
     def _chunk_from_row(row: ChunkRow) -> Chunk:
         return Chunk(
-            id=row.id, document_id=row.document_id, ordinal=row.ordinal, text=row.text,
-            entity_ids=row.entity_ids or [], metadata=row.chunk_metadata or {},
+            id=row.id,
+            document_id=row.document_id,
+            ordinal=row.ordinal,
+            text=row.text,
+            entity_ids=row.entity_ids or [],
+            metadata=row.chunk_metadata or {},
             embedding=list(row.embedding) if row.embedding is not None else None,
         )

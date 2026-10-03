@@ -14,8 +14,13 @@ def test_generation_is_reproducible(tmp_path: Path) -> None:
     manifest_a = generate_dataset(tmp_path / "a")
     manifest_b = generate_dataset(tmp_path / "b")
     assert manifest_a == manifest_b
-    for rel in ("entities.csv", "relationships.csv", "graph.ttl",
-                "tables/site_metrics_monthly.csv", "documents_index.json"):
+    for rel in (
+        "entities.csv",
+        "relationships.csv",
+        "graph.ttl",
+        "tables/site_metrics_monthly.csv",
+        "documents_index.json",
+    ):
         assert (tmp_path / "a" / rel).read_bytes() == (tmp_path / "b" / rel).read_bytes(), rel
 
 

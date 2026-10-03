@@ -32,9 +32,11 @@ def configure_logging(level: str = "INFO", json_mode: bool = False) -> None:
     if _CONFIGURED:
         return
     handler = logging.StreamHandler(sys.stderr)
-    handler.setFormatter(JsonFormatter() if json_mode else logging.Formatter(
-        "%(asctime)s %(levelname)-7s %(name)s | %(message)s"
-    ))
+    handler.setFormatter(
+        JsonFormatter()
+        if json_mode
+        else logging.Formatter("%(asctime)s %(levelname)-7s %(name)s | %(message)s")
+    )
     root = logging.getLogger()
     root.handlers = [handler]
     root.setLevel(level.upper())

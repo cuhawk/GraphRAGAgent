@@ -65,8 +65,10 @@ def run_sparql(ctx: ToolContext, args: RunSparqlArgs) -> SparqlResult:
         raise ToolError(f"SPARQL execution failed: {exc}") from exc
 
 
-def query_structured_data(ctx: ToolContext, args: QueryStructuredArgs,
-                          ) -> StructuredQueryResult:
+def query_structured_data(
+    ctx: ToolContext,
+    args: QueryStructuredArgs,
+) -> StructuredQueryResult:
     from nexusgraph.store.structured import run_structured_query
 
     try:
@@ -82,8 +84,7 @@ def get_entity(ctx: ToolContext, args: GetEntityArgs) -> EntityDetail | None:
 
 
 def get_relationships(ctx: ToolContext, args: GetRelationshipsArgs) -> list[Relationship]:
-    rels = ctx.runtime.entities.get_relationships(
-        args.entity_id, relation=args.relation)
+    rels = ctx.runtime.entities.get_relationships(args.entity_id, relation=args.relation)
     return rels[: ctx.limits.max_rows]
 
 
@@ -93,8 +94,7 @@ def retrieve_document(ctx: ToolContext, args: RetrieveDocumentArgs) -> DocumentD
         return None
     half = ctx.limits.max_result_bytes // 2
     if len(document.text) > half:
-        document = document.model_copy(
-            update={"text": document.text[:half] + " …[truncated]"})
+        document = document.model_copy(update={"text": document.text[:half] + " …[truncated]"})
     chunks = ctx.runtime.documents.chunks_for_document(document.id)
     return DocumentDetail(document=document, chunk_count=len(chunks))
 
@@ -111,16 +111,22 @@ def verify_claim(ctx: ToolContext, args: VerifyClaimArgs) -> ClaimVerification:
     known = ctx.known_evidence_ids or set()
     if not args.evidence_ids:
         return ClaimVerification(
-            supported=False, verdict="unsupported",
+            supported=False,
+            verdict="unsupported",
             rationale="no evidence references supplied for the claim",
-            evidence_ids=[])
+            evidence_ids=[],
+        )
     missing = [e for e in args.evidence_ids if e not in known]
     if missing:
         return ClaimVerification(
-            supported=False, verdict="insufficient_evidence",
+            supported=False,
+            verdict="insufficient_evidence",
             rationale=f"evidence references not found in ledger: {missing}",
-            evidence_ids=[e for e in args.evidence_ids if e not in missing])
+            evidence_ids=[e for e in args.evidence_ids if e not in missing],
+        )
     return ClaimVerification(
-        supported=True, verdict="supported",
+        supported=True,
+        verdict="supported",
         rationale="all evidence references resolve to retrieved evidence",
-        evidence_ids=args.evidence_ids)
+        evidence_ids=args.evidence_ids,
+    )

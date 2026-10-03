@@ -28,18 +28,21 @@ def test_valid_spec_passes_and_compiles() -> None:
     [
         lambda: QuerySpec(table="sqlite_master"),
         lambda: QuerySpec(table="site_metrics_monthly; DROP TABLE users"),
-        lambda: QuerySpec(table="site_metrics_monthly",
-                          select=["site_id", "password_hash"]),
-        lambda: QuerySpec(table="site_metrics_monthly",
-                          filters=[FilterCondition(column="evil", op="eq", value=1)]),
-        lambda: QuerySpec(table="site_metrics_monthly",
-                          filters=[FilterCondition(column="site_id", op="eq",
-                                                   value="x" * 300)]),
-        lambda: QuerySpec(table="site_metrics_monthly",
-                          filters=[FilterCondition(column="site_id", op="eq",
-                                                   value={"$gt": 1})]),
-        lambda: QuerySpec(table="site_metrics_monthly",
-                          aggregations=[Aggregation(func="sum", column=None)]),
+        lambda: QuerySpec(table="site_metrics_monthly", select=["site_id", "password_hash"]),
+        lambda: QuerySpec(
+            table="site_metrics_monthly", filters=[FilterCondition(column="evil", op="eq", value=1)]
+        ),
+        lambda: QuerySpec(
+            table="site_metrics_monthly",
+            filters=[FilterCondition(column="site_id", op="eq", value="x" * 300)],
+        ),
+        lambda: QuerySpec(
+            table="site_metrics_monthly",
+            filters=[FilterCondition(column="site_id", op="eq", value={"$gt": 1})],
+        ),
+        lambda: QuerySpec(
+            table="site_metrics_monthly", aggregations=[Aggregation(func="sum", column=None)]
+        ),
     ],
 )
 def test_invalid_specs_rejected(spec_builder) -> None:

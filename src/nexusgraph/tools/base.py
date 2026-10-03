@@ -30,8 +30,7 @@ class ToolBudget:
 
     def acquire(self, tool: str) -> None:
         if self.used >= self._max:
-            raise ToolBudgetExceeded(
-                f"tool-call budget exhausted ({self.used}/{self._max})")
+            raise ToolBudgetExceeded(f"tool-call budget exhausted ({self.used}/{self._max})")
         self.used += 1
         self.calls_by_tool[tool] = self.calls_by_tool.get(tool, 0) + 1
 

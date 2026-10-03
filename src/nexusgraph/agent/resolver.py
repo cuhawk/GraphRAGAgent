@@ -23,9 +23,16 @@ class QuestionEntityResolver:
         for surface, entity_id in names:
             id_by_surface.setdefault(surface, entity_id)
         self._id_by_surface = id_by_surface
-        self._surface_re = re.compile(
-            r"(?<![A-Za-z0-9])(" + "|".join(re.escape(s) for s in surfaces) +
-            r")(?![A-Za-z0-9])", re.IGNORECASE) if surfaces else None
+        self._surface_re = (
+            re.compile(
+                r"(?<![A-Za-z0-9])("
+                + "|".join(re.escape(s) for s in surfaces)
+                + r")(?![A-Za-z0-9])",
+                re.IGNORECASE,
+            )
+            if surfaces
+            else None
+        )
 
     def resolve(self, question: str) -> list[Entity]:
         if self._surface_re is None:
@@ -36,13 +43,17 @@ class QuestionEntityResolver:
             start, end = match.span()
             if any(s < end and start < e for s, e in occupied):
                 continue  # inside an already-matched longer surface
-            entity_id = self._id_by_surface.get(match.group(0)) \
-                or next((eid for s, eid in self._id_by_surface.items()
-                         if s.lower() == match.group(0).lower()), None)
+            entity_id = self._id_by_surface.get(match.group(0)) or next(
+                (
+                    eid
+                    for s, eid in self._id_by_surface.items()
+                    if s.lower() == match.group(0).lower()
+                ),
+                None,
+            )
             if entity_id is None:
                 continue
             occupied.append((start, end))
             entity_type, _, local = entity_id.partition(":")
-            found.setdefault(entity_id, Entity(
-                id=entity_id, type=entity_type, name=match.group(0)))
+            found.setdefault(entity_id, Entity(id=entity_id, type=entity_type, name=match.group(0)))
         return sorted(found.values(), key=lambda e: len(e.name), reverse=True)

@@ -37,17 +37,30 @@ def test_local_vector_index_roundtrip(engine, document_store) -> None:
     from nexusgraph.domain.models import Chunk, DocumentMeta
     from nexusgraph.retrieval.embeddings import HashEmbedder
 
-    document_store.upsert_document(DocumentMeta(
-        id="doc:D-9001", title="Ops review", content_type="text/markdown",
-        source_path="x.md", text="Site A enrolment declined while costs increased.",
-    ))
+    document_store.upsert_document(
+        DocumentMeta(
+            id="doc:D-9001",
+            title="Ops review",
+            content_type="text/markdown",
+            source_path="x.md",
+            text="Site A enrolment declined while costs increased.",
+        )
+    )
     embedder = HashEmbedder()
-    document_store.replace_chunks("doc:D-9001", [
-        Chunk(id="doc:D-9001#chunk-0001", document_id="doc:D-9001", ordinal=1,
-              text="Site A enrolment declined while costs increased.",
-              embedding=embedder.embed_texts(
-                  ["Site A enrolment declined while costs increased."])[0]),
-    ])
+    document_store.replace_chunks(
+        "doc:D-9001",
+        [
+            Chunk(
+                id="doc:D-9001#chunk-0001",
+                document_id="doc:D-9001",
+                ordinal=1,
+                text="Site A enrolment declined while costs increased.",
+                embedding=embedder.embed_texts(
+                    ["Site A enrolment declined while costs increased."]
+                )[0],
+            ),
+        ],
+    )
     index = LocalVectorIndex(engine)
     assert index.refresh() == 1
     query = embedder.embed_texts(["enrolment decline at Site A"])[0]

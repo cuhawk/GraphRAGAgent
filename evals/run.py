@@ -37,9 +37,13 @@ _RESULTS_DIR = Path(__file__).parent / "results"
 
 def _git_rev() -> str | None:
     try:
-        return subprocess.run(["git", "rev-parse", "--short", "HEAD"],
-                              capture_output=True, text=True, timeout=5,
-                              check=True).stdout.strip()
+        return subprocess.run(
+            ["git", "rev-parse", "--short", "HEAD"],
+            capture_output=True,
+            text=True,
+            timeout=5,
+            check=True,
+        ).stdout.strip()
     except Exception:
         return None
 
@@ -55,8 +59,7 @@ def run_suite(cases: list[EvalCase], out_dir: Path) -> dict[str, Any]:
     model = settings.llm.model
 
     results: list[CaseResult] = []
-    print(f"running {len(cases)} eval cases (provider={provider}, "
-          f"model={model}) ...")
+    print(f"running {len(cases)} eval cases (provider={provider}, model={model}) ...")
     for index, case in enumerate(cases, start=1):
         started = time.perf_counter()
         try:
@@ -66,18 +69,18 @@ def run_suite(cases: list[EvalCase], out_dir: Path) -> dict[str, Any]:
             result = grade_error(case, exc)
             logger.error("case %s crashed: %s", case.id, exc)
         results.append(result)
-        print(f"  [{index:>2}/{len(cases)}] {case.id:<4} "
-              f"{case.category:<12} {'PASS' if result.passed else 'FAIL'} "
-              f"({time.perf_counter() - started:.1f}s)")
+        print(
+            f"  [{index:>2}/{len(cases)}] {case.id:<4} "
+            f"{case.category:<12} {'PASS' if result.passed else 'FAIL'} "
+            f"({time.perf_counter() - started:.1f}s)"
+        )
 
     report = aggregate(results, provider=provider, model=model)
-    write_outputs(report, results, cases, out_dir, provider=provider,
-                  model=model)
+    write_outputs(report, results, cases, out_dir, provider=provider, model=model)
     return report
 
 
-def aggregate(results: list[CaseResult], *, provider: str,
-              model: str) -> dict[str, Any]:
+def aggregate(results: list[CaseResult], *, provider: str, model: str) -> dict[str, Any]:
     total = len(results)
     passed = sum(1 for r in results if r.passed)
     by_category: dict[str, dict[str, float]] = {}
@@ -86,8 +89,7 @@ def aggregate(results: list[CaseResult], *, provider: str,
         if subset:
             by_category[category] = {
                 "cases": len(subset),
-                "success_rate": round(
-                    sum(1 for r in subset if r.passed) / len(subset), 4),
+                "success_rate": round(sum(1 for r in subset if r.passed) / len(subset), 4),
             }
 
     retrieval = [r.retrieval for r in results if r.retrieval is not None]
@@ -95,8 +97,7 @@ def aggregate(results: list[CaseResult], *, provider: str,
     latencies = [r.latency_ms for r in results if r.latency_ms > 0]
     total_claims = sum(r.claims for r in results)
     unsupported = sum(r.unsupported_claims for r in results)
-    unsupported_rate = (round(unsupported / total_claims, 4)
-                        if total_claims else None)
+    unsupported_rate = round(unsupported / total_claims, 4) if total_claims else None
 
     def mean(values: list[float]) -> float | None:
         return round(statistics.fmean(values), 4) if values else None
@@ -105,8 +106,7 @@ def aggregate(results: list[CaseResult], *, provider: str,
         if not values:
             return None
         ordered = sorted(values)
-        return round(ordered[min(len(ordered) - 1,
-                                 int(0.95 * len(ordered)))], 1)
+        return round(ordered[min(len(ordered) - 1, int(0.95 * len(ordered)))], 1)
 
     return {
         "provider": provider,
@@ -115,14 +115,10 @@ def aggregate(results: list[CaseResult], *, provider: str,
         "passed": passed,
         "success_rate": round(passed / total, 4) if total else None,
         "by_category": by_category,
-        "retrieval_recall": mean([m.recall for m in retrieval
-                                  if m.recall is not None]),
-        "retrieval_precision": mean([m.precision for m in retrieval
-                                     if m.precision is not None]),
-        "citation_precision": mean([m.precision for m in citations
-                                    if m.precision is not None]),
-        "citation_recall": mean([m.recall for m in citations
-                                 if m.recall is not None]),
+        "retrieval_recall": mean([m.recall for m in retrieval if m.recall is not None]),
+        "retrieval_precision": mean([m.precision for m in retrieval if m.precision is not None]),
+        "citation_precision": mean([m.precision for m in citations if m.precision is not None]),
+        "citation_recall": mean([m.recall for m in citations if m.recall is not None]),
         "unsupported_claims": unsupported,
         "unsupported_claim_rate": unsupported_rate,
         "tool_selection_accuracy": _tool_selection(results),
@@ -142,9 +138,15 @@ def _tool_selection(results: list[CaseResult]) -> float | None:
     return round(ok / len(relevant), 4)
 
 
-def write_outputs(report: dict[str, Any], results: list[CaseResult],
-                  cases: list[EvalCase], out_dir: Path, *, provider: str,
-                  model: str) -> None:
+def write_outputs(
+    report: dict[str, Any],
+    results: list[CaseResult],
+    cases: list[EvalCase],
+    out_dir: Path,
+    *,
+    provider: str,
+    model: str,
+) -> None:
     out_dir.mkdir(parents=True, exist_ok=True)
     stamp = datetime.now(UTC).strftime("%Y%m%d-%H%M%S")
     payload = {
@@ -156,12 +158,9 @@ def write_outputs(report: dict[str, Any], results: list[CaseResult],
         "report": report,
         "results": [r.model_dump() for r in results],
     }
-    (out_dir / f"results-{stamp}.json").write_text(
-        json.dumps(payload, indent=2), encoding="utf-8")
-    (out_dir / "latest.json").write_text(
-        json.dumps(payload, indent=2), encoding="utf-8")
-    (out_dir / "report.md").write_text(
-        render_markdown(payload, cases), encoding="utf-8")
+    (out_dir / f"results-{stamp}.json").write_text(json.dumps(payload, indent=2), encoding="utf-8")
+    (out_dir / "latest.json").write_text(json.dumps(payload, indent=2), encoding="utf-8")
+    (out_dir / "report.md").write_text(render_markdown(payload, cases), encoding="utf-8")
     print(f"results written to {out_dir}/report.md")
 
 
@@ -180,8 +179,7 @@ def render_markdown(payload: dict[str, Any], cases: list[EvalCase]) -> str:
         "",
         "| Metric | Value |",
         "| --- | --- |",
-        f"| Success rate | {report['success_rate']} ({report['passed']}"
-        f"/{report['cases']}) |",
+        f"| Success rate | {report['success_rate']} ({report['passed']}/{report['cases']}) |",
     ]
     for key, label in [
         ("retrieval_recall", "Retrieval recall (expected docs)"),
@@ -198,14 +196,23 @@ def render_markdown(payload: dict[str, Any], cases: list[EvalCase]) -> str:
         value = report.get(key)
         lines.append(f"| {label} | {value if value is not None else 'n/a'} |")
 
-    lines += ["", "## Per category", "",
-              "| Category | Cases | Success rate |", "| --- | --- | --- |"]
+    lines += [
+        "",
+        "## Per category",
+        "",
+        "| Category | Cases | Success rate |",
+        "| --- | --- | --- |",
+    ]
     for category, stats in report["by_category"].items():
-        lines.append(f"| {category} | {stats['cases']} | "
-                     f"{stats['success_rate']} |")
+        lines.append(f"| {category} | {stats['cases']} | {stats['success_rate']} |")
 
-    lines += ["", "## Per case", "",
-              "| ID | Category | Result | Failed checks |", "| --- | --- | --- | --- |"]
+    lines += [
+        "",
+        "## Per case",
+        "",
+        "| ID | Category | Result | Failed checks |",
+        "| --- | --- | --- | --- |",
+    ]
     by_id = {r["case_id"]: r for r in payload["results"]}
     for case in cases:
         r = by_id[case.id]
@@ -222,8 +229,7 @@ def render_markdown(payload: dict[str, Any], cases: list[EvalCase]) -> str:
         "- Answers were produced by the full agent pipeline (planner -> "
         "guarded tools -> evidence ledger -> synthesizer -> citation check).",
         "- Graders are deterministic: no LLM judged any answer.",
-        "- Expected ids derive from the synthetic corpus manifest "
-        "(seed 42); see evals/cases.py.",
+        "- Expected ids derive from the synthetic corpus manifest (seed 42); see evals/cases.py.",
         "- Token/cost figures are the run's own accounting; in `mock` "
         "provider mode there are no LLM calls on the answer path.",
         "",
@@ -233,12 +239,12 @@ def render_markdown(payload: dict[str, Any], cases: list[EvalCase]) -> str:
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
-        prog="python -m evals.run",
-        description="Run the NexusGraph deterministic eval suite")
-    parser.add_argument("--limit", type=int, default=None,
-                        help="run only the first N cases")
-    parser.add_argument("--cases", type=str, default=None,
-                        help="comma-separated case ids (e.g. R1,S1,M1)")
+        prog="python -m evals.run", description="Run the NexusGraph deterministic eval suite"
+    )
+    parser.add_argument("--limit", type=int, default=None, help="run only the first N cases")
+    parser.add_argument(
+        "--cases", type=str, default=None, help="comma-separated case ids (e.g. R1,S1,M1)"
+    )
     parser.add_argument("--out-dir", type=Path, default=_RESULTS_DIR)
     args = parser.parse_args(argv)
 
@@ -255,8 +261,7 @@ def main(argv: list[str] | None = None) -> int:
         parser.error("no cases selected")
 
     report = run_suite(cases, args.out_dir)
-    print(f"\nsuccess rate: {report['success_rate']} "
-          f"({report['passed']}/{report['cases']})")
+    print(f"\nsuccess rate: {report['success_rate']} ({report['passed']}/{report['cases']})")
     return 0 if report["passed"] == report["cases"] else 1
 
 

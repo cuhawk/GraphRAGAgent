@@ -26,8 +26,18 @@ from pathlib import Path
 from random import Random
 
 MONTHS: list[str] = [
-    "2024-07", "2024-08", "2024-09", "2024-10", "2024-11", "2024-12",
-    "2025-01", "2025-02", "2025-03", "2025-04", "2025-05", "2025-06",
+    "2024-07",
+    "2024-08",
+    "2024-09",
+    "2024-10",
+    "2024-11",
+    "2024-12",
+    "2025-01",
+    "2025-02",
+    "2025-03",
+    "2025-04",
+    "2025-05",
+    "2025-06",
 ]
 
 REGIONS: list[tuple[str, str]] = [
@@ -139,8 +149,13 @@ TRIAL_SITES: dict[str, list[str]] = {
 
 # id, name, country_id, hospital_id, metric pattern
 SITES: list[tuple[str, str, str, str | None, str]] = [
-    ("S-1001", "Site A (Nordhaven University Hospital)", "CT-101", "H-6001",
-     "declining_cost_rising"),
+    (
+        "S-1001",
+        "Site A (Nordhaven University Hospital)",
+        "CT-101",
+        "H-6001",
+        "declining_cost_rising",
+    ),
     ("S-1002", "Site B (Marrow Creek Medical Center)", "CT-103", "H-6002", "rising"),
     ("S-1003", "Sjoland Coastal Trial Unit", "CT-102", None, "strong_rising"),
     ("S-1004", "Luxford Phase Unit 4", "CT-104", "H-6006", "rising"),
@@ -191,14 +206,36 @@ TRIAL_DATES: dict[str, tuple[str, str]] = {  # id -> (start_date, planned_end_da
 }
 
 INVESTIGATOR_NAMES: list[str] = [
-    "Aino Vikstrom", "Mateo Carreras", "Freja Lindqvist", "Tomas Brandt",
-    "Elena Solberg", "Pieter Vandenberg", "Clara Osswald", "Jonas Kettner",
-    "Sofia Marchetti", "Lukas Brenner", "Marta Nowicki", "Andre Cazals",
-    "Ingrid Halvorsen", "Diego Ferran", "Katja Reinhardt", "Nils Ekstrom",
-    "Paula Ribeiro", "Marcus Delvin", "Hana Sorokin", "Oskar Valldal",
-    "Renata Almeida", "Viktor Sandell", "Camille Duret", "Sander Holm",
-    "Anneli Kask", "Bruno Tavares", "Elin Aas", "Gero Falk",
-    "Nadia Cormier", "Rurik Salmela",
+    "Aino Vikstrom",
+    "Mateo Carreras",
+    "Freja Lindqvist",
+    "Tomas Brandt",
+    "Elena Solberg",
+    "Pieter Vandenberg",
+    "Clara Osswald",
+    "Jonas Kettner",
+    "Sofia Marchetti",
+    "Lukas Brenner",
+    "Marta Nowicki",
+    "Andre Cazals",
+    "Ingrid Halvorsen",
+    "Diego Ferran",
+    "Katja Reinhardt",
+    "Nils Ekstrom",
+    "Paula Ribeiro",
+    "Marcus Delvin",
+    "Hana Sorokin",
+    "Oskar Valldal",
+    "Renata Almeida",
+    "Viktor Sandell",
+    "Camille Duret",
+    "Sander Holm",
+    "Anneli Kask",
+    "Bruno Tavares",
+    "Elin Aas",
+    "Gero Falk",
+    "Nadia Cormier",
+    "Rurik Salmela",
 ]
 
 SENIORITIES = ["Principal Investigator", "Senior Investigator", "Staff Investigator"]
@@ -240,24 +277,87 @@ MILESTONES: list[tuple[str, str, str, str | None]] = [
 # no medical outcomes, no patient-level data.
 SAFETY_EVENTS: list[tuple[str, str, str, str | None, str, str, str]] = [
     # id, site_id, trial_id, compound_id, severity, reported_at, description
-    ("SE-11001", "S-1001", "T-2001", "C-5001", "HIGH", "2024-08-14",
-     "Compound storage temperature excursion above the permitted range"),
-    ("SE-11002", "S-1001", "T-2001", None, "HIGH", "2024-10-02",
-     "Recurring site staff shortage during scheduled dosing visits"),
-    ("SE-11003", "S-1001", "T-2001", None, "MEDIUM", "2024-11-19",
-     "Sample shipment delay exceeding the stability window"),
-    ("SE-11004", "S-1001", "T-2001", None, "HIGH", "2025-01-07",
-     "Device calibration drift affecting primary endpoint capture"),
-    ("SE-11005", "S-1001", "T-2001", None, "LOW", "2025-02-25",
-     "Data capture system outage during a scheduled visit window"),
-    ("SE-11006", "S-1004", "T-2001", None, "LOW", "2025-01-21",
-     "Visitor access badge lapse in the restricted storage area"),
-    ("SE-11007", "S-1006", "T-2002", None, "MEDIUM", "2024-09-30",
-     "Refrigerated sample relay stopped overnight"),
-    ("SE-11008", "S-1011", "T-2003", "C-5004", "HIGH", "2025-03-11",
-     "Site power interruption during a stability chamber cycle"),
-    ("SE-11009", "S-1013", "T-2003", None, "HIGH", "2025-02-05",
-     "Monitoring visit found repeated protocol deviation patterns"),
+    (
+        "SE-11001",
+        "S-1001",
+        "T-2001",
+        "C-5001",
+        "HIGH",
+        "2024-08-14",
+        "Compound storage temperature excursion above the permitted range",
+    ),
+    (
+        "SE-11002",
+        "S-1001",
+        "T-2001",
+        None,
+        "HIGH",
+        "2024-10-02",
+        "Recurring site staff shortage during scheduled dosing visits",
+    ),
+    (
+        "SE-11003",
+        "S-1001",
+        "T-2001",
+        None,
+        "MEDIUM",
+        "2024-11-19",
+        "Sample shipment delay exceeding the stability window",
+    ),
+    (
+        "SE-11004",
+        "S-1001",
+        "T-2001",
+        None,
+        "HIGH",
+        "2025-01-07",
+        "Device calibration drift affecting primary endpoint capture",
+    ),
+    (
+        "SE-11005",
+        "S-1001",
+        "T-2001",
+        None,
+        "LOW",
+        "2025-02-25",
+        "Data capture system outage during a scheduled visit window",
+    ),
+    (
+        "SE-11006",
+        "S-1004",
+        "T-2001",
+        None,
+        "LOW",
+        "2025-01-21",
+        "Visitor access badge lapse in the restricted storage area",
+    ),
+    (
+        "SE-11007",
+        "S-1006",
+        "T-2002",
+        None,
+        "MEDIUM",
+        "2024-09-30",
+        "Refrigerated sample relay stopped overnight",
+    ),
+    (
+        "SE-11008",
+        "S-1011",
+        "T-2003",
+        "C-5004",
+        "HIGH",
+        "2025-03-11",
+        "Site power interruption during a stability chamber cycle",
+    ),
+    (
+        "SE-11009",
+        "S-1013",
+        "T-2003",
+        None,
+        "HIGH",
+        "2025-02-05",
+        "Monitoring visit found repeated protocol deviation patterns",
+    ),
 ]
 
 INVESTIGATOR_SITE_ASSIGNMENT: dict[str, list[str]] = {
@@ -285,12 +385,12 @@ INVESTIGATOR_SITE_ASSIGNMENT: dict[str, list[str]] = {
 
 # Capacity slope per region (capacity_index change per month)
 CAPACITY_TREND: dict[str, float] = {
-    "R-01": 0.007,   # Nordic: slightly rising (distractor)
+    "R-01": 0.007,  # Nordic: slightly rising (distractor)
     "R-02": -0.031,  # Western Europe: DECLINING capacity while enrolment rises
-    "R-03": 0.000,   # Central Europe: flat
-    "R-04": 0.000,   # Iberian: flat (and enrolment declining anyway)
-    "R-05": 0.021,   # North Atlantic: rising (distractor: both rise)
-    "R-06": 0.000,   # Baltic: flat
+    "R-03": 0.000,  # Central Europe: flat
+    "R-04": 0.000,  # Iberian: flat (and enrolment declining anyway)
+    "R-05": 0.021,  # North Atlantic: rising (distractor: both rise)
+    "R-06": 0.000,  # Baltic: flat
 }
 
 
@@ -349,86 +449,153 @@ def build_corpus(seed: int = 42) -> Corpus:
 
     # ---- geography / organisations -------------------------------------
     for rid, name in REGIONS:
-        corpus.entities.append(EntityRec(f"region:{rid}", "region", name,
-                                         f"Synthetic operating region {name}."))
+        corpus.entities.append(
+            EntityRec(f"region:{rid}", "region", name, f"Synthetic operating region {name}.")
+        )
     for cid, name, rid in COUNTRIES:
-        corpus.entities.append(EntityRec(f"country:{cid}", "country", name,
-                                         f"Synthetic country {name} in region {rid}."))
+        corpus.entities.append(
+            EntityRec(
+                f"country:{cid}", "country", name, f"Synthetic country {name} in region {rid}."
+            )
+        )
         corpus.relationships.append((f"country:{cid}", f"region:{rid}", "COUNTRY_IN_REGION"))
     for hid, name, cid in HOSPITALS:
-        corpus.entities.append(EntityRec(f"hospital:{hid}", "hospital", name,
-                                         f"Synthetic hospital {name} in country {cid}."))
+        corpus.entities.append(
+            EntityRec(
+                f"hospital:{hid}", "hospital", name, f"Synthetic hospital {name} in country {cid}."
+            )
+        )
         corpus.relationships.append((f"hospital:{hid}", f"country:{cid}", "HOSPITAL_LOCATED_IN"))
     for coid, name, hq in COMPANIES:
-        corpus.entities.append(EntityRec(
-            f"company:{coid}", "company", name,
-            f"Synthetic pharmaceutical company headquartered in {hq}."))
+        corpus.entities.append(
+            EntityRec(
+                f"company:{coid}",
+                "company",
+                name,
+                f"Synthetic pharmaceutical company headquartered in {hq}.",
+            )
+        )
     for cid, name, target in COMPOUNDS:
-        corpus.entities.append(EntityRec(
-            f"compound:{cid}", "compound", name,
-            f"Synthetic investigational compound {name} (fictional target: {target})."))
+        corpus.entities.append(
+            EntityRec(
+                f"compound:{cid}",
+                "compound",
+                name,
+                f"Synthetic investigational compound {name} (fictional target: {target}).",
+            )
+        )
     for pid, name, coid, comp in PRODUCTS:
-        corpus.entities.append(EntityRec(
-            f"product:{pid}", "product", name,
-            f"Synthetic therapeutic product {name} by {coid}, derived from {comp}."))
+        corpus.entities.append(
+            EntityRec(
+                f"product:{pid}",
+                "product",
+                name,
+                f"Synthetic therapeutic product {name} by {coid}, derived from {comp}.",
+            )
+        )
         corpus.relationships.append((f"company:{coid}", f"product:{pid}", "COMPANY_OWNS_PRODUCT"))
         corpus.relationships.append((f"product:{pid}", f"compound:{comp}", "PRODUCT_DERIVED_FROM"))
-        corpus.relationships.append((f"compound:{comp}", f"product:{pid}",
-                                     "COMPOUND_RELATED_TO_PRODUCT"))
+        corpus.relationships.append(
+            (f"compound:{comp}", f"product:{pid}", "COMPOUND_RELATED_TO_PRODUCT")
+        )
 
     # ---- trials / milestones / safety events ---------------------------
     for tid, codename, phase, coid, status in TRIALS:
         start, end = TRIAL_DATES[tid]
-        corpus.entities.append(EntityRec(
-            f"trial:{tid}", "trial", codename,
-            f"Synthetic clinical trial {codename} ({phase}) sponsored by {coid}."))
+        corpus.entities.append(
+            EntityRec(
+                f"trial:{tid}",
+                "trial",
+                codename,
+                f"Synthetic clinical trial {codename} ({phase}) sponsored by {coid}.",
+            )
+        )
         corpus.relationships.append((f"company:{coid}", f"trial:{tid}", "COMPANY_SPONSORS_TRIAL"))
         for comp in TRIAL_COMPOUNDS[tid]:
             corpus.relationships.append((f"trial:{tid}", f"compound:{comp}", "TRIAL_USES_COMPOUND"))
-        corpus.tables.setdefault("trials", []).append({
-            "trial_id": tid, "codename": codename, "phase": phase, "company_id": coid,
-            "status": status, "start_date": start, "planned_end_date": end,
-        })
+        corpus.tables.setdefault("trials", []).append(
+            {
+                "trial_id": tid,
+                "codename": codename,
+                "phase": phase,
+                "company_id": coid,
+                "status": status,
+                "start_date": start,
+                "planned_end_date": end,
+            }
+        )
     for tid, name, due, completed in MILESTONES:
         mid = f"M-{3001 + MILESTONES.index((tid, name, due, completed))}"
-        corpus.entities.append(EntityRec(
-            f"milestone:{mid}", "milestone", f"{name} ({tid})",
-            f"Milestone {name} of trial {tid} (due {due})."))
+        corpus.entities.append(
+            EntityRec(
+                f"milestone:{mid}",
+                "milestone",
+                f"{name} ({tid})",
+                f"Milestone {name} of trial {tid} (due {due}).",
+            )
+        )
         corpus.relationships.append((f"trial:{tid}", f"milestone:{mid}", "TRIAL_HAS_MILESTONE"))
-        corpus.tables.setdefault("milestones", []).append({
-            "milestone_id": mid, "trial_id": tid, "name": name,
-            "due_date": due, "completed_date": completed,
-        })
+        corpus.tables.setdefault("milestones", []).append(
+            {
+                "milestone_id": mid,
+                "trial_id": tid,
+                "name": name,
+                "due_date": due,
+                "completed_date": completed,
+            }
+        )
     for eid, sid, tid, comp_opt, severity, reported, desc in SAFETY_EVENTS:
-        corpus.entities.append(EntityRec(
-            f"safetyevent:{eid}", "safetyevent", eid,
-            f"Operational safety event at {sid}: {desc} (severity {severity})."))
-        corpus.relationships.append((f"trial:{tid}", f"safetyevent:{eid}",
-                                     "TRIAL_REPORTS_SAFETY_EVENT"))
+        corpus.entities.append(
+            EntityRec(
+                f"safetyevent:{eid}",
+                "safetyevent",
+                eid,
+                f"Operational safety event at {sid}: {desc} (severity {severity}).",
+            )
+        )
+        corpus.relationships.append(
+            (f"trial:{tid}", f"safetyevent:{eid}", "TRIAL_REPORTS_SAFETY_EVENT")
+        )
         corpus.relationships.append((f"safetyevent:{eid}", f"site:{sid}", "SAFETY_EVENT_AT_SITE"))
         if comp_opt:
-            corpus.relationships.append((f"safetyevent:{eid}", f"compound:{comp_opt}",
-                                         "SAFETY_EVENT_INVOLVES_COMPOUND"))
-        corpus.tables.setdefault("safety_events", []).append({
-            "event_id": eid, "site_id": sid, "trial_id": tid,
-            "compound_id": comp_opt or "",
-            "severity": severity, "reported_at": reported, "description": desc,
-        })
+            corpus.relationships.append(
+                (f"safetyevent:{eid}", f"compound:{comp_opt}", "SAFETY_EVENT_INVOLVES_COMPOUND")
+            )
+        corpus.tables.setdefault("safety_events", []).append(
+            {
+                "event_id": eid,
+                "site_id": sid,
+                "trial_id": tid,
+                "compound_id": comp_opt or "",
+                "severity": severity,
+                "reported_at": reported,
+                "description": desc,
+            }
+        )
 
     # ---- sites ----------------------------------------------------------
     for sid, name, cid, host, _pattern in SITES:
-        corpus.entities.append(EntityRec(
-            f"site:{sid}", "site", name,
-            f"Synthetic trial site in {cid}"
-            + (f", hosted by {host}" if host else "") + "."))
+        corpus.entities.append(
+            EntityRec(
+                f"site:{sid}",
+                "site",
+                name,
+                f"Synthetic trial site in {cid}" + (f", hosted by {host}" if host else "") + ".",
+            )
+        )
         if host:
             corpus.relationships.append((f"site:{sid}", f"hospital:{hid}", "SITE_LOCATED_IN"))
         else:
             corpus.relationships.append((f"site:{sid}", f"country:{cid}", "SITE_LOCATED_IN"))
-        corpus.tables.setdefault("sites", []).append({
-            "site_id": sid, "name": name, "country_id": cid,
-            "hospital_id": hid or "", "metric_pattern": _pattern,
-        })
+        corpus.tables.setdefault("sites", []).append(
+            {
+                "site_id": sid,
+                "name": name,
+                "country_id": cid,
+                "hospital_id": hid or "",
+                "metric_pattern": _pattern,
+            }
+        )
 
     for tid, sids in TRIAL_SITES.items():
         for sid in sids:
@@ -439,16 +606,20 @@ def build_corpus(seed: int = 42) -> Corpus:
         trials_for_site = [t for t, sids in TRIAL_SITES.items() if sid in sids]
         primary = trials_for_site[0]
         rows = _series(rng, pattern)
-        for (trial, scale) in [(primary, 1.0)] + [
+        for trial, scale in [(primary, 1.0)] + [
             (t, round(rng.uniform(0.35, 0.6), 2)) for t in trials_for_site[1:]
         ]:
             for i, month in enumerate(MONTHS):
                 enrolled, cost = rows[i]
-                site_rows.append({
-                    "site_id": sid, "trial_id": trial, "month": month,
-                    "patients_enrolled": max(0, round(enrolled * scale)),
-                    "operational_cost": round(cost * scale),
-                })
+                site_rows.append(
+                    {
+                        "site_id": sid,
+                        "trial_id": trial,
+                        "month": month,
+                        "patients_enrolled": max(0, round(enrolled * scale)),
+                        "operational_cost": round(cost * scale),
+                    }
+                )
     corpus.tables["site_metrics_monthly"] = site_rows
 
     # ---- investigators + capacity ---------------------------------------
@@ -457,18 +628,32 @@ def build_corpus(seed: int = 42) -> Corpus:
     name_i = 0
     for sid, investigators in INVESTIGATOR_SITE_ASSIGNMENT.items():
         for j, iid in enumerate(investigators):
-            name = INVESTIGATOR_NAMES[name_i] if name_i < len(INVESTIGATOR_NAMES) \
+            name = (
+                INVESTIGATOR_NAMES[name_i]
+                if name_i < len(INVESTIGATOR_NAMES)
                 else f"Investigator {iid}"
+            )
             name_i += 1
             seniority = SENIORITIES[j % len(SENIORITIES)]
-            corpus.entities.append(EntityRec(
-                f"investigator:{iid}", "investigator", name,
-                f"Synthetic {seniority} at site {sid}."))
-            corpus.relationships.append((f"investigator:{iid}", f"site:{sid}",
-                                         "INVESTIGATOR_WORKS_AT"))
-            investigator_rows.append({
-                "investigator_id": iid, "name": name, "site_id": sid, "seniority": seniority,
-            })
+            corpus.entities.append(
+                EntityRec(
+                    f"investigator:{iid}",
+                    "investigator",
+                    name,
+                    f"Synthetic {seniority} at site {sid}.",
+                )
+            )
+            corpus.relationships.append(
+                (f"investigator:{iid}", f"site:{sid}", "INVESTIGATOR_WORKS_AT")
+            )
+            investigator_rows.append(
+                {
+                    "investigator_id": iid,
+                    "name": name,
+                    "site_id": sid,
+                    "seniority": seniority,
+                }
+            )
     corpus.tables["investigators"] = investigator_rows
     cap_rows: list[dict[str, object]] = []
     for inv in investigator_rows:
@@ -477,11 +662,15 @@ def build_corpus(seed: int = 42) -> Corpus:
         slope = CAPACITY_TREND[region]
         base = 0.92 if slope < 0 else 0.70
         for i, month in enumerate(MONTHS):
-            cap_rows.append({
-                "investigator_id": inv["investigator_id"], "month": month,
-                "capacity_index": round(max(0.1, min(1.0, base + slope * i
-                                                     + rng.uniform(-0.02, 0.02))), 3),
-            })
+            cap_rows.append(
+                {
+                    "investigator_id": inv["investigator_id"],
+                    "month": month,
+                    "capacity_index": round(
+                        max(0.1, min(1.0, base + slope * i + rng.uniform(-0.02, 0.02))), 3
+                    ),
+                }
+            )
     corpus.tables["investigator_capacity_monthly"] = cap_rows
 
     # ---- region analytics marts (pre-joined for the single-table SQL tool)
@@ -498,8 +687,12 @@ def build_corpus(seed: int = 42) -> Corpus:
         totals[0] += int(str(row["patients_enrolled"]))
         totals[1] += int(str(row["operational_cost"]))
     corpus.tables["site_metrics_region_monthly"] = [
-        {"region_id": region, "month": month, "total_patients_enrolled": totals[0],
-         "total_operational_cost": totals[1]}
+        {
+            "region_id": region,
+            "month": month,
+            "total_patients_enrolled": totals[0],
+            "total_operational_cost": totals[1],
+        }
         for (region, month), totals in sorted(region_metrics.items())
     ]
 
@@ -513,8 +706,7 @@ def build_corpus(seed: int = 42) -> Corpus:
         acc[0] += float(str(row["capacity_index"]))
         acc[1] += 1
     corpus.tables["investigator_capacity_region_monthly"] = [
-        {"region_id": region, "month": month,
-         "avg_capacity_index": round(acc[0] / acc[1], 4)}
+        {"region_id": region, "month": month, "avg_capacity_index": round(acc[0] / acc[1], 4)}
         for (region, month), acc in sorted(region_capacity.items())
     ]
 
@@ -529,6 +721,7 @@ def build_corpus(seed: int = 42) -> Corpus:
 
     # ---- documents (rendered in synth.documents) -------------------------
     from nexusgraph.synth.documents import build_documents
+
     corpus.documents = build_documents()
 
     return corpus
@@ -570,18 +763,26 @@ def write_corpus(corpus: Corpus, out_dir: Path) -> dict[str, object]:
     for doc in sorted(corpus.documents, key=lambda d: d.doc_id):
         if doc.pdf_text is not None:
             from nexusgraph.synth.documents import render_pdf
+
             render_pdf(doc.pdf_text, out_dir / "documents" / doc.filename)
         else:
             (out_dir / "documents" / doc.filename).write_text(doc.text, encoding="utf-8")
-        index.append({
-            "doc_id": doc.doc_id, "title": doc.title, "filename": doc.filename,
-            "content_type": doc.content_type, "document_date": doc.document_date,
-            "mentions": doc.mentions, "adversarial": doc.adversarial,
-        })
+        index.append(
+            {
+                "doc_id": doc.doc_id,
+                "title": doc.title,
+                "filename": doc.filename,
+                "content_type": doc.content_type,
+                "document_date": doc.document_date,
+                "mentions": doc.mentions,
+                "adversarial": doc.adversarial,
+            }
+        )
     with (out_dir / "documents_index.json").open("w", encoding="utf-8") as fh:
         json.dump(index, fh, indent=2, ensure_ascii=False)
 
     from nexusgraph.synth.rdf import build_data_graph, write_turtle
+
     ttl_path = out_dir / "graph.ttl"
     write_turtle(build_data_graph(corpus), ttl_path)
 

@@ -46,25 +46,37 @@ class GraphStore:
         """Bulk-load generated entity/relationship data (default graph)."""
         self._store.load(path=path, format=ox.RdfFormat.TURTLE)
 
-    def add_document_entity(self, document_id: str, title: str, content_type: str,
-                            document_date: str | None, entity_uris: list[str]) -> int:
+    def add_document_entity(
+        self,
+        document_id: str,
+        title: str,
+        content_type: str,
+        document_date: str | None,
+        entity_uris: list[str],
+    ) -> int:
         """Write the document entity (rdf:type, title, ...) plus DOCUMENT_MENTIONS
         triples into the document's named graph — full provenance scoping."""
         graph = ox.NamedNode(document_graph_uri(document_id))
         doc = ox.NamedNode(document_uri(document_id))
         ngx = ONTOLOGY_BASE
         rdf_type = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type"
-        self._store.add(ox.Quad(doc, ox.NamedNode(rdf_type),
-                                ox.NamedNode(f"{ngx}ResearchDocument"), graph))
-        self._store.add(ox.Quad(doc, ox.NamedNode(f"{ngx}title"),
-                                ox.Literal(title), graph))
-        self._store.add(ox.Quad(doc, ox.NamedNode(f"{ngx}contentType"),
-                                ox.Literal(content_type), graph))
+        self._store.add(
+            ox.Quad(doc, ox.NamedNode(rdf_type), ox.NamedNode(f"{ngx}ResearchDocument"), graph)
+        )
+        self._store.add(ox.Quad(doc, ox.NamedNode(f"{ngx}title"), ox.Literal(title), graph))
+        self._store.add(
+            ox.Quad(doc, ox.NamedNode(f"{ngx}contentType"), ox.Literal(content_type), graph)
+        )
         if document_date:
             xsd_date = "http://www.w3.org/2001/XMLSchema#date"
-            self._store.add(ox.Quad(doc, ox.NamedNode(f"{ngx}documentDate"),
-                                    ox.Literal(document_date, datatype=ox.NamedNode(xsd_date)),
-                                    graph))
+            self._store.add(
+                ox.Quad(
+                    doc,
+                    ox.NamedNode(f"{ngx}documentDate"),
+                    ox.Literal(document_date, datatype=ox.NamedNode(xsd_date)),
+                    graph,
+                )
+            )
         for uri in entity_uris:
             self._store.add(ox.Quad(doc, _MENTION, ox.NamedNode(uri), graph))
         return len(entity_uris)
@@ -133,7 +145,8 @@ class GraphStore:
 
         if isinstance(outcome, bool):
             return SparqlResult(
-                query=clean, variables=["ask"],
+                query=clean,
+                variables=["ask"],
                 rows=[{"ask": "true" if outcome else "false"}],
                 row_count=1,
             )
@@ -141,5 +154,6 @@ class GraphStore:
         variables, rows, truncated = outcome
         elapsed_ms = round((time.perf_counter() - started) * 1000, 2)
         logger.info("sparql ok", extra={"tool": "run_sparql", "duration_ms": elapsed_ms})
-        return SparqlResult(query=clean, variables=variables, rows=rows,
-                            row_count=len(rows), truncated=truncated)
+        return SparqlResult(
+            query=clean, variables=variables, rows=rows, row_count=len(rows), truncated=truncated
+        )

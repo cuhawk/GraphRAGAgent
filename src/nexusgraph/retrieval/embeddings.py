@@ -45,7 +45,7 @@ class HashEmbedder:
             features.append(word)
             if len(word) > 3:
                 padded = f"^{word}$"
-                features.extend(padded[i:i + 3] for i in range(len(padded) - 2))
+                features.extend(padded[i : i + 3] for i in range(len(padded) - 2))
         for feature in features[:4_000]:  # bounded work per document
             digest = hashlib.blake2b(feature.encode("utf-8"), digest_size=8).digest()
             bucket = int.from_bytes(digest[:4], "big") % self._dim
@@ -89,7 +89,8 @@ class OpenAICompatEmbedder:
         if embeddings and len(embeddings[0]) != self._dim:
             raise ValueError(
                 f"embedding dimension mismatch: endpoint returned "
-                f"{len(embeddings[0])}, configured {self._dim}")
+                f"{len(embeddings[0])}, configured {self._dim}"
+            )
         return embeddings
 
 
