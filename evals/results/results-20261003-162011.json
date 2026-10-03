@@ -1,0 +1,90 @@
+{
+  "generated_at": "2026-10-03T16:20:11.865032+00:00",
+  "provider": "mock",
+  "model": "mock-deterministic",
+  "dataset_seed": 42,
+  "git_rev": "6f7c360",
+  "report": {
+    "provider": "mock",
+    "model": "mock-deterministic",
+    "cases": 2,
+    "passed": 2,
+    "success_rate": 1.0,
+    "by_category": {
+      "retrieval": {
+        "cases": 1,
+        "success_rate": 1.0
+      },
+      "sql": {
+        "cases": 1,
+        "success_rate": 1.0
+      }
+    },
+    "retrieval_recall": 1.0,
+    "retrieval_precision": 0.2,
+    "citation_precision": 1.0,
+    "citation_recall": 1.0,
+    "unsupported_claims": 0,
+    "unsupported_claim_rate": 0.0,
+    "tool_selection_accuracy": 1.0,
+    "avg_latency_ms": 10.1,
+    "p95_latency_ms": 14.2,
+    "total_tokens": 0,
+    "estimated_cost_usd": 0.0
+  },
+  "results": [
+    {
+      "case_id": "R2",
+      "category": "retrieval",
+      "passed": true,
+      "checks": {
+        "question_type": true,
+        "tools": true,
+        "insufficient": true,
+        "citations": true,
+        "retrieval": true
+      },
+      "retrieval": {
+        "recall": 1.0,
+        "precision": 0.2
+      },
+      "citations": {
+        "precision": 1.0,
+        "recall": 1.0
+      },
+      "claims": 3,
+      "unsupported_claims": 0,
+      "tool_calls": 1,
+      "latency_ms": 14.2,
+      "tokens": 0,
+      "estimated_cost_usd": 0.0,
+      "error": null,
+      "failed": []
+    },
+    {
+      "case_id": "S2",
+      "category": "sql",
+      "passed": true,
+      "checks": {
+        "tools": true,
+        "ids": true,
+        "text": true,
+        "insufficient": true,
+        "citations": true
+      },
+      "retrieval": null,
+      "citations": {
+        "precision": 1.0,
+        "recall": 1.0
+      },
+      "claims": 3,
+      "unsupported_claims": 0,
+      "tool_calls": 2,
+      "latency_ms": 6.0,
+      "tokens": 0,
+      "estimated_cost_usd": 0.0,
+      "error": null,
+      "failed": []
+    }
+  ]
+}

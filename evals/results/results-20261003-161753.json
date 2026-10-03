@@ -1,0 +1,65 @@
+{
+  "generated_at": "2026-10-03T16:17:53.288035+00:00",
+  "provider": "mock",
+  "model": "mock-deterministic",
+  "dataset_seed": 42,
+  "git_rev": "6f7c360",
+  "report": {
+    "provider": "mock",
+    "model": "mock-deterministic",
+    "cases": 1,
+    "passed": 0,
+    "success_rate": 0.0,
+    "by_category": {
+      "retrieval": {
+        "cases": 1,
+        "success_rate": 0.0
+      }
+    },
+    "retrieval_recall": 0.0,
+    "retrieval_precision": 0.0,
+    "citation_precision": 1.0,
+    "citation_recall": 1.0,
+    "unsupported_claims": 0,
+    "unsupported_claim_rate": 0.0,
+    "tool_selection_accuracy": 0.0,
+    "avg_latency_ms": 14.0,
+    "p95_latency_ms": 14.0,
+    "total_tokens": 0,
+    "estimated_cost_usd": 0.0
+  },
+  "results": [
+    {
+      "case_id": "R2",
+      "category": "retrieval",
+      "passed": false,
+      "checks": {
+        "question_type": false,
+        "tools": false,
+        "insufficient": true,
+        "citations": true,
+        "retrieval": false
+      },
+      "retrieval": {
+        "recall": 0.0,
+        "precision": 0.0
+      },
+      "citations": {
+        "precision": 1.0,
+        "recall": 1.0
+      },
+      "claims": 2,
+      "unsupported_claims": 0,
+      "tool_calls": 1,
+      "latency_ms": 14.0,
+      "tokens": 0,
+      "estimated_cost_usd": 0.0,
+      "error": null,
+      "failed": [
+        "question_type",
+        "tools",
+        "retrieval"
+      ]
+    }
+  ]
+}

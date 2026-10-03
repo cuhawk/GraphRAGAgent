@@ -521,6 +521,9 @@ def build_corpus(seed: int = 42) -> Corpus:
     # ---- aliases (used by extraction + name resolution) -------------------
     for e in corpus.entities:
         corpus.aliases[e.name] = e.id
+        # local ids ("T-2001", "S-1001", ...) are natural surface forms too
+        local = e.id.split(":", 1)[-1]
+        corpus.aliases.setdefault(local, e.id)
     corpus.aliases["Site A"] = "site:S-1001"
     corpus.aliases["Site B"] = "site:S-1002"
 

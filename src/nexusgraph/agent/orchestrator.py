@@ -29,6 +29,7 @@ from nexusgraph.agent.sparql_templates import (
     compounds_with_safety_reports_and_sites,
     delayed_milestones_with_trials,
     documents_mentioning,
+    documents_mentioning_compounds_of_trial,
     entity_neighbours,
     products_of_delayed_trials,
     safety_events_at_site,
@@ -311,6 +312,10 @@ class AgentOrchestrator:
         if intent == "delayed_milestones":
             return delayed_milestones_with_trials(), False
         if intent == "documents_mentioning":
+            trial_id = next((e.id for e in resolved
+                             if e.id.startswith("trial:")), None)
+            if trial_id:
+                return (documents_mentioning_compounds_of_trial(trial_id), True)
             ids = [e.id for e in resolved] or ["site:S-1001"]
             return documents_mentioning(ids), True
         if intent == "safety_events" and entity_id and entity_id.startswith("site:"):

@@ -215,7 +215,8 @@ class DeterministicSynthesizer:
         if entity_evidence:
             claims.append(Claim(
                 claim=("Entity lookup returned: "
-                       + "; ".join(e.snippet or e.source_id
+                       + "; ".join(f"{e.source_id}: "
+                                   f"{(e.snippet or e.source_id)[:160]}"
                                    for e in entity_evidence[:_MAX_LISTED]) + "."),
                 evidence_ids=[e.evidence_id for e in entity_evidence],
             ))

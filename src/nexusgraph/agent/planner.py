@@ -41,19 +41,24 @@ RELATION_RE = re.compile(
     r"\b(linked|link|connected|connect|associated|association|mention\w*|derived|"
     r"works? (at|for)|located|belongs?|related|relation\w*|between|compare\w*|"
     r"versus|vs\.?|higher|lower|risk|support\w*|evidence|which (products?|studies?|"
-    r"trials?|documents?|sites?|compounds?))\b", re.IGNORECASE)
+    r"trials?|documents?|sites?|compounds?|milestones?))\b", re.IGNORECASE)
 DOC_RE = re.compile(
     r"\b(document|documents|report|reports|dossier|written|write[- ]?up|"
-    r"research|evidence)\b", re.IGNORECASE)
+    r"research|evidence|handbook|bulletin|summary|profile|audit|memo|log)\b",
+    re.IGNORECASE)
 DELAYED_RE = re.compile(r"\bdelayed?\b|\blate\b|\boverdue\b", re.IGNORECASE)
 SAFETY_RE = re.compile(r"\bsafety\b|\bincident\w*\b|\bseverity\b", re.IGNORECASE)
 REGION_RE = re.compile(r"\bregions?\b|\bcluster\b", re.IGNORECASE)
 UNANSWERABLE_RE = re.compile(
     r"\b(market share|revenue|profit\w*|stock price|share price|weather|salary|"
-    r"ceo|headquarters address|french|spanish|birthday|founded)\b", re.IGNORECASE)
+    r"ceo|headquarters address|french|spanish|birthday|founded|"
+    r"employees?|headcount|head count)\b", re.IGNORECASE)
 LOOKUP_RE = re.compile(
     r"\b(tell me about|describe|what is|who is|details? (of|for)|show)\b",
     re.IGNORECASE)
+# "What does the X say/report/..." is a document question even when it also
+# mentions quantities ('capacity', 'enrolment', ...).
+SAY_RE = re.compile(r"\bwhat (does|do|did)\b.{0,60}\bsay\b", re.IGNORECASE)
 COMPARISON_RE = re.compile(r"\b(compare\w*|versus|vs\.?|higher .{0,20} than|"
                            r"lower .{0,20} than|difference between)\b", re.IGNORECASE)
 
@@ -81,6 +86,17 @@ class HeuristicRouter:
         wants_docs = bool(DOC_RE.search(q))
         wants_quant = bool(QUANT_RE.search(q))
         wants_rel = bool(RELATION_RE.search(q))
+
+        # Explicit "what does X say" phrasing points at document content;
+        # it must not be dragged into the structured-trend path by quant
+        # keywords such as 'capacity' or 'enrolment'.
+        if wants_docs and SAY_RE.search(q):
+            return Plan(
+                question_type="semantic",
+                steps=[_step("search_documents",
+                             "Document-content question -> hybrid retrieval.",
+                             intent="search")],
+                rationale="Document phrasing overrides keyword heuristics.")
 
         if wants_rel and wants_quant:
             steps: list[PlanStep] = []
@@ -129,6 +145,19 @@ class HeuristicRouter:
                 steps.append(_step("run_sparql",
                                    "Trials with delayed milestones and their products.",
                                    intent="products_of_delayed_trials"))
+            elif "documents" in q.lower() and "mention" in q.lower() and entity_ids:
+                steps.append(_step("run_sparql",
+                                   "Documents whose text mentions the entities.",
+                                   intent="documents_mentioning",
+                                   entity_id=entity_ids[0]))
+            elif "site" in q.lower() and any(e.id.startswith("trial:")
+                                             for e in resolved):
+                trial_id = next(e.id for e in resolved
+                                if e.id.startswith("trial:"))
+                steps.append(_step("run_sparql",
+                                   f"Sites of trial {trial_id}.",
+                                   intent="sites_of_trial",
+                                   entity_id=trial_id))
             elif entity_ids:
                 for entity_id in entity_ids[:2]:
                     steps.append(_step("run_sparql",

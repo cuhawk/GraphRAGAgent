@@ -43,6 +43,15 @@ def documents_mentioning(entity_ids: list[str]) -> str:
         f"?document ngx:title ?title }} ORDER BY ?document")
 
 
+def documents_mentioning_compounds_of_trial(trial_id: str) -> str:
+    """trial -> compounds -> (mention named graphs) -> documents (3-hop)."""
+    return PREFIX_BLOCK + (
+        f"SELECT DISTINCT ?document ?title ?compound WHERE {{ "
+        f"<{_uri(trial_id)}> ngx:TRIAL_USES_COMPOUND ?compound . "
+        f"?document ngx:DOCUMENT_MENTIONS ?compound . "
+        f"?document ngx:title ?title }} ORDER BY ?document")
+
+
 def delayed_milestones_with_trials() -> str:
     return PREFIX_BLOCK + (
         "SELECT ?milestone ?trial ?due ?completed WHERE { "
