@@ -1,8 +1,8 @@
 """Tool implementations.
 
 Every tool: typed args -> typed result, guarded inputs, capped outputs,
-per-call span in the trace. The orchestrator converts results into Evidence;
-tools themselves never emit citations (single responsibility).
+per-call span in the trace. The orchestrator converts results into Evidence
+with document provenance supplied by retrieval.
 """
 
 from __future__ import annotations
@@ -33,22 +33,13 @@ logger = get_logger("tools")
 
 
 def search_documents(ctx: ToolContext, args: SearchDocumentsArgs) -> list[SearchHit]:
-    hits = ctx.runtime.retrieval.search(
+    return ctx.runtime.retrieval.search(
         args.query,
         k=min(args.k, ctx.limits.retrieval_k * 2),
         document_ids=args.document_ids or None,
         entity_ids=args.entity_ids or None,
         content_types=args.content_types or None,
     )
-    # Defensive double-cap on returned characters (THREAT_MODEL).
-    kept: list[SearchHit] = []
-    budget = ctx.limits.max_retrieval_chars
-    for hit in hits:
-        if budget - len(hit.text) < 0 and kept:
-            break
-        budget -= len(hit.text)
-        kept.append(hit)
-    return kept
 
 
 def run_sparql(ctx: ToolContext, args: RunSparqlArgs) -> SparqlResult:

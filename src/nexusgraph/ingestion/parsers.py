@@ -1,4 +1,4 @@
-"""Document parsers: CSV, JSON, Markdown, plain text, PDF (text layer via pypdf)."""
+"""Document parsers: CSV, JSON, Markdown, HTML, plain text, PDF (text layer via pypdf)."""
 
 from __future__ import annotations
 
@@ -12,6 +12,8 @@ logger = get_logger("ingestion.parsers")
 CONTENT_TYPES: dict[str, str] = {
     ".md": "text/markdown",
     ".markdown": "text/markdown",
+    ".html": "text/html",
+    ".htm": "text/html",
     ".txt": "text/plain",
     ".csv": "text/csv",
     ".json": "application/json",
@@ -65,7 +67,7 @@ def _parse_pdf(raw: bytes) -> str:
 
     try:
         reader = PdfReader(io.BytesIO(raw))
-        pages = [(page.extract_text() or "") for page in reader.pages]
+        pages = [(page.extract_text(extraction_mode="layout") or "") for page in reader.pages]
     except Exception as exc:
         raise ParseError(f"PDF parsing failed: {exc}") from exc
     return "\n\n".join(p for p in pages if p.strip())

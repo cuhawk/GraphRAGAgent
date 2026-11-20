@@ -77,6 +77,7 @@ class EvidenceLedger:
         snippet: str | None = None,
         uri: str | None = None,
         confidence: float = 1.0,
+        snippet_limit: int | None = SNIPPET_CHARS,
     ) -> Evidence | None:
         key = (source_id, location)
         if key in self._seen or len(self._items) >= self._max:
@@ -87,7 +88,7 @@ class EvidenceLedger:
             source_id=source_id,
             source_type=source_type,
             location=location,
-            snippet=(snippet[:SNIPPET_CHARS] if snippet else None),
+            snippet=(snippet[:snippet_limit] if snippet else None),
             uri=uri,
             confidence=confidence,
         )
@@ -101,8 +102,9 @@ class EvidenceLedger:
             evidence = self._add(
                 source_id=hit.document_id,
                 source_type=SourceType.document,
-                location=hit.chunk_id,
+                location=hit.citation or hit.chunk_id,
                 snippet=hit.text,
+                snippet_limit=None,
             )
             if evidence:
                 added.append(evidence)

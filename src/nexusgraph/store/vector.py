@@ -10,6 +10,7 @@ Two implementations behind one protocol:
 
 from __future__ import annotations
 
+import json
 from dataclasses import dataclass
 from typing import Protocol
 
@@ -69,13 +70,16 @@ class LocalVectorIndex:
                 )
                 .join(DocumentRow, ChunkRow.document_id == DocumentRow.id)
                 .where(ChunkRow.embedding.is_not(None))
+                .order_by(ChunkRow.id)
             ).all()
         ids: list[str] = []
         vectors: list[list[float]] = []
         meta: dict[str, tuple[str, list[str], str]] = {}
         for chunk_id, document_id, entity_ids, embedding, content_type in rows:
+            if not embedding:  # Older SQLite rows can store JSON null rather than SQL NULL.
+                continue
             ids.append(chunk_id)
-            vectors.append([float(x) for x in (embedding or [])])
+            vectors.append([float(x) for x in embedding])
             meta[chunk_id] = (document_id, entity_ids or [], content_type)
         self._ids = ids
         self._meta = meta
@@ -104,7 +108,7 @@ class LocalVectorIndex:
         sims = (self._matrix / norms) @ query  # cosine similarity in [-1, 1]
         sims = (sims + 1.0) / 2.0  # -> [0, 1]
 
-        order = np.argsort(-sims)
+        order = np.argsort(-sims, kind="stable")
         results: list[ScoredChunk] = []
         for idx in order:
             chunk_id = self._ids[int(idx)]
@@ -162,12 +166,13 @@ class PgVectorIndex:
                 params["ctypes"] = list(filters.content_types)
             if filters.entity_ids:
                 ors = " OR ".join(
-                    f"chunks.entity_ids @> :ent_{i}::jsonb" for i in range(len(filters.entity_ids))
+                    f"chunks.entity_ids @> CAST(:ent_{i} AS jsonb)"
+                    for i in range(len(filters.entity_ids))
                 )
                 sql += f" AND ({ors})"
                 for i, ent in enumerate(filters.entity_ids):
-                    params[f"ent_{i}"] = f'["{ent}"]'
-        sql += " ORDER BY chunks.embedding <=> :vec LIMIT :k"
+                    params[f"ent_{i}"] = json.dumps([ent])
+        sql += " ORDER BY chunks.embedding <=> :vec, chunks.id LIMIT :k"
         params["k"] = k
         with self._engine.connect() as conn:
             rows = conn.execute(text(sql), params).all()

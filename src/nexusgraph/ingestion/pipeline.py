@@ -22,13 +22,14 @@ import json
 import pathlib
 from collections.abc import Callable
 from dataclasses import dataclass, field
+from urllib.parse import quote
 
 from sqlalchemy import Engine
 
 from nexusgraph.config import Settings
 from nexusgraph.domain.ids import entity_uri
 from nexusgraph.domain.models import Chunk, DocumentMeta, Entity, Relationship
-from nexusgraph.ingestion.chunking import chunk_text
+from nexusgraph.ingestion.chunking import chunk_document
 from nexusgraph.ingestion.extraction import ExtractionResult
 from nexusgraph.ingestion.parsers import ParseError, parse_file, supported
 from nexusgraph.ingestion.resolution import EntityResolver, dedupe_entities
@@ -223,20 +224,27 @@ class IngestionPipeline:
             result: ExtractionResult = extractor.extract(text)  # type: ignore[attr-defined]
             report.extraction_methods[doc_id] = result.method
 
-            chunks = chunk_text(text, self._settings.limits.max_chunk_chars)
-            embeddings = self._embedder.embed_texts(chunks)
+            chunks = chunk_document(text, content_type, self._settings.limits.max_chunk_chars)
+            embeddings = self._embedder.embed_texts([chunk.contextual_text for chunk in chunks])
             chunk_models = [
                 Chunk(
                     id=f"{doc_id}#chunk-{ordinal:04d}",
                     document_id=doc_id,
                     ordinal=ordinal,
-                    text=chunk,
+                    text=chunk.text,
                     entity_ids=result.entity_ids,
                     metadata={
+                        "headings": chunk.headings,
+                        "start_line": chunk.start_line,
+                        "end_line": chunk.end_line,
                         "provenance": {
                             "source_id": doc_id,
-                            "location": f"{doc_id}#chunk-{ordinal:04d}",
-                        }
+                            "location": (
+                                f"[{quote(doc_id, safe='')}:"
+                                f"{quote(' > '.join(chunk.headings) or 'root', safe='')}:"
+                                f"{chunk.start_line}]"
+                            ),
+                        },
                     },
                     embedding=embedding,
                 )
