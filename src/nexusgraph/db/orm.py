@@ -15,7 +15,7 @@ from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
 _JSON_VARIANT = JSON().with_variant(JSONB(), "postgresql")
-_EMBEDDING_VARIANT = JSON().with_variant(Vector(), "postgresql")
+_EMBEDDING_VARIANT = JSON(none_as_null=True).with_variant(Vector(), "postgresql")
 
 
 class Base(DeclarativeBase):

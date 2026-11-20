@@ -95,6 +95,9 @@ class SearchHit(BaseModel):
     entity_ids: list[str] = Field(default_factory=list)
     dense_score: float | None = None
     lexical_score: float | None = None
+    reranker_score: float | None = None
+    evidence_coverage: float = 0.0
+    citation: str | None = None
 
 
 # --------------------------------------------------------------------------- #

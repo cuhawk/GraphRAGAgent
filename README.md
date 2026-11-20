@@ -41,7 +41,7 @@ Ask a question in natural language; the agent decides how to answer it:
 
 | Question type | Example | Path |
 | --- | --- | --- |
-| Semantic | "What does the investigator handbook say about capacity reporting?" | hybrid retrieval (dense + BM25) |
+| Semantic | "What does the investigator handbook say about capacity reporting?" | hybrid retrieval (dense, BM25, RRF, and late interaction) |
 | Relationship | "Which sites belong to trial T-2001?" | SPARQL graph traversal |
 | Quantitative | "How did enrolment and cost change at Site A?" | typed SQL over monthly metrics, least-squares trend claims |
 | Multi-hop | "Which products are derived from compounds used in trials that have delayed milestones?" | 4-hop SPARQL |
@@ -243,37 +243,34 @@ Treat generated/retrieved content as untrusted. Layered controls
 
 ## Evaluation and measured results
 
-Run the deterministic eval suite:
+Run the full agent eval suite and the retrieval ablation with the offline defaults.
 
 ```bash
-uv run python -m evals.run          # writes evals/results/report.md + latest.json
+uv run python -m evals.run
+uv run python -m benchmarks.run_ablation
 ```
 
-19 cases across retrieval / graph / sql / multi_hop / mixed / unanswerable /
-adversarial-injection, graded **deterministically** (no LLM judge; expected ids
-derive from the corpus manifest). Latest measured run (mock provider — the
-deterministic path, no LLM calls; see `evals/results/latest.json` for
-provenance):
+Document ingestion retains Markdown and HTML section breadcrumbs, repeats table
+headers on continuation chunks, and keeps rows intact. It also supports CSV,
+JSON, plain text, and text-layer PDF extraction. Re-ingest existing documents
+to populate source-line provenance.
 
-| Metric | Value |
-| --- | --- |
-| Success rate | 1.00 (19/19) |
-| Retrieval recall (expected docs) | 1.00 |
-| Retrieval precision | 0.19 |
-| Citation precision / recall | 1.00 / 1.00 |
-| Unsupported-claim rate | 0.00 |
-| Tool-selection accuracy | 1.00 |
-| Average latency | 5.6 ms |
-| p95 latency | 14.1 ms |
-| Total tokens / cost | 0 (mock mode) |
+Document search fuses independent dense and BM25 rankings using RRF, then
+reranks candidates using token-level late interaction. The packer returns
+whole passages with `[doc:section:line]` citations and abstains when no
+passage clears the evidence threshold and fits the budget. Context tokens
+are counted with an offline word-and-punctuation tokenizer.
 
-**How to read this honestly**: these numbers measure the *deterministic
-mock-provider path* on 19 synthetic cases designed around the corpus's
-scenario facts. Retrieval precision is low by construction (k=6 retrieval
-against expected sets of 1–2 documents). Nothing here measures LLM-provider
-quality, production traffic, or real-world data — those require plugging in a
-real model (`NEXUSGRAPH_LLM_PROVIDER=openai-compatible`) and are **not yet
-measured**. Metric definitions: [docs/EVALS.md](docs/EVALS.md).
+The ablation uses the seed-42 synthetic corpus and hash embeddings. Ranking
+metrics use unique document IDs. Citation precision and refusal accuracy
+measure the retrieval output. See the [ablation methodology](benchmarks/RESULTS.md)
+and [full agent evaluation report](evals/results/report.md).
+
+| Configuration | MRR@10 | Recall@5 | NDCG@10 | Citation precision | Refusal accuracy |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| Dense-only | 1.0000 | 1.0000 | 1.0000 | 0.4375 | 0.3333 |
+| Hybrid RRF | 1.0000 | 1.0000 | 1.0000 | 0.4375 | 0.3333 |
+| Hybrid RRF + Reranker | 1.0000 | 1.0000 | 1.0000 | 0.4375 | 0.3333 |
 
 ## Development
 
@@ -281,9 +278,9 @@ measured**. Metric definitions: [docs/EVALS.md](docs/EVALS.md).
 uv sync --extra dev
 uv run pytest                    # full suite
 uv run pytest -m "not integration"
-uv run ruff check src tests evals
+uv run ruff check src tests evals benchmarks
 uv run ruff format src
-uv run mypy src evals
+uv run mypy src evals benchmarks
 uv run python -m evals.run       # evals (results/ is committed per measured run)
 ```
 

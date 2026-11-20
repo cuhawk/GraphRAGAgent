@@ -1,9 +1,4 @@
-"""Compact Okapi BM25 (k1=1.5, b=0.75) used to rerank dense retrieval candidates.
-
-Documented approximation: IDF statistics are computed over the candidate set
-(not the whole corpus) because this ranker only ever sees the top dense
-candidates. Deterministic and dependency-free.
-"""
+"""Compact Okapi BM25 (k1=1.5, b=0.75) over the filtered corpus."""
 
 from __future__ import annotations
 
@@ -11,7 +6,7 @@ import math
 import re
 from collections.abc import Sequence
 
-_TOKEN_RE = re.compile(r"[a-z0-9]+")
+_TOKEN_RE = re.compile(r"[^\W_]+(?:[-_.][^\W_]+)*", re.UNICODE)
 
 K1 = 1.5
 B = 0.75

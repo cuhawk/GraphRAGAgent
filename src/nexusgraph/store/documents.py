@@ -3,10 +3,11 @@
 from __future__ import annotations
 
 from sqlalchemy import Engine, delete, func, select
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, defer
 
 from nexusgraph.db.orm import ChunkRow, DocumentRow
 from nexusgraph.domain.models import Chunk, DocumentMeta
+from nexusgraph.store.vector import ChunkFilter
 
 
 class DocumentStore:
@@ -114,6 +115,26 @@ class DocumentStore:
             )
         return [self._chunk_from_row(r) for r in rows]
 
+    def matching_chunks(self, filters: ChunkFilter) -> list[Chunk]:
+        """Read the sparse corpus without loading embeddings."""
+        query = (
+            select(ChunkRow)
+            .join(DocumentRow, ChunkRow.document_id == DocumentRow.id)
+            .options(defer(ChunkRow.embedding))
+            .order_by(ChunkRow.id)
+        )
+        if filters.document_ids:
+            query = query.where(ChunkRow.document_id.in_(filters.document_ids))
+        if filters.content_types:
+            query = query.where(DocumentRow.content_type.in_(filters.content_types))
+        entity_ids = set(filters.entity_ids)
+        with Session(self._engine) as session:
+            return [
+                self._chunk_from_row(row, include_embedding=False)
+                for row in session.scalars(query)
+                if not entity_ids or entity_ids.intersection(row.entity_ids or ())
+            ]
+
     def chunk_count(self) -> int:
         with Session(self._engine) as session:
             return int(session.scalar(select(func.count()).select_from(ChunkRow)) or 0)
@@ -123,7 +144,7 @@ class DocumentStore:
             return int(session.scalar(select(func.count()).select_from(DocumentRow)) or 0)
 
     @staticmethod
-    def _chunk_from_row(row: ChunkRow) -> Chunk:
+    def _chunk_from_row(row: ChunkRow, *, include_embedding: bool = True) -> Chunk:
         return Chunk(
             id=row.id,
             document_id=row.document_id,
@@ -131,5 +152,7 @@ class DocumentStore:
             text=row.text,
             entity_ids=row.entity_ids or [],
             metadata=row.chunk_metadata or {},
-            embedding=list(row.embedding) if row.embedding is not None else None,
+            embedding=list(row.embedding)
+            if include_embedding and row.embedding is not None
+            else None,
         )

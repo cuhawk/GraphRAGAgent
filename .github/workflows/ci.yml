@@ -16,11 +16,11 @@ jobs:
       - name: Install
         run: uv sync --extra dev
       - name: Ruff
-        run: uv run ruff check src tests evals
+        run: uv run ruff check src tests evals benchmarks
       - name: Ruff format
-        run: uv run ruff format --check src evals
+        run: uv run ruff format --check src evals benchmarks
       - name: mypy
-        run: uv run mypy src evals
+        run: uv run mypy src evals benchmarks
 
   tests:
     runs-on: ubuntu-latest
@@ -76,6 +76,8 @@ jobs:
         run: |
           uv run nexusgraph bootstrap
           uv run python -m evals.run
+      - name: Run retrieval ablation
+        run: uv run python -m benchmarks.run_ablation
       - name: Upload eval report
         uses: actions/upload-artifact@v4
         with:
