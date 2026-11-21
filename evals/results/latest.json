@@ -1,14 +1,14 @@
 {
-  "generated_at": "2026-10-03T16:41:14.061397+00:00",
+  "generated_at": "2026-11-21T03:11:34.571554+00:00",
   "provider": "mock",
   "model": "mock-deterministic",
   "dataset_seed": 42,
-  "git_rev": "58d4f3f",
+  "git_rev": "218bf96",
   "report": {
     "provider": "mock",
     "model": "mock-deterministic",
-    "cases": 19,
-    "passed": 19,
+    "cases": 60,
+    "passed": 60,
     "success_rate": 1.0,
     "by_category": {
       "retrieval": {
@@ -24,7 +24,7 @@
         "success_rate": 1.0
       },
       "multi_hop": {
-        "cases": 2,
+        "cases": 10,
         "success_rate": 1.0
       },
       "mixed": {
@@ -32,23 +32,35 @@
         "success_rate": 1.0
       },
       "unanswerable": {
-        "cases": 3,
+        "cases": 13,
         "success_rate": 1.0
       },
       "adversarial": {
         "cases": 3,
         "success_rate": 1.0
+      },
+      "exact": {
+        "cases": 9,
+        "success_rate": 1.0
+      },
+      "near_miss": {
+        "cases": 8,
+        "success_rate": 1.0
+      },
+      "document_hygiene": {
+        "cases": 6,
+        "success_rate": 1.0
       }
     },
     "retrieval_recall": 1.0,
-    "retrieval_precision": 0.1889,
+    "retrieval_precision": 1.0,
     "citation_precision": 1.0,
     "citation_recall": 1.0,
     "unsupported_claims": 0,
     "unsupported_claim_rate": 0.0,
     "tool_selection_accuracy": 1.0,
-    "avg_latency_ms": 6.3842,
-    "p95_latency_ms": 14.3,
+    "avg_latency_ms": 10.5783,
+    "p95_latency_ms": 16.2,
     "total_tokens": 0,
     "estimated_cost_usd": 0.0
   },
@@ -60,22 +72,23 @@
       "checks": {
         "question_type": true,
         "tools": true,
+        "text": true,
         "insufficient": true,
         "citations": true,
         "retrieval": true
       },
       "retrieval": {
         "recall": 1.0,
-        "precision": 0.2
+        "precision": 1.0
       },
       "citations": {
         "precision": 1.0,
         "recall": 1.0
       },
-      "claims": 3,
+      "claims": 1,
       "unsupported_claims": 0,
       "tool_calls": 1,
-      "latency_ms": 14.3,
+      "latency_ms": 26.0,
       "tokens": 0,
       "estimated_cost_usd": 0.0,
       "error": null,
@@ -88,22 +101,23 @@
       "checks": {
         "question_type": true,
         "tools": true,
+        "text": true,
         "insufficient": true,
         "citations": true,
         "retrieval": true
       },
       "retrieval": {
         "recall": 1.0,
-        "precision": 0.2
+        "precision": 1.0
       },
       "citations": {
         "precision": 1.0,
         "recall": 1.0
       },
-      "claims": 3,
+      "claims": 1,
       "unsupported_claims": 0,
       "tool_calls": 1,
-      "latency_ms": 7.2,
+      "latency_ms": 14.0,
       "tokens": 0,
       "estimated_cost_usd": 0.0,
       "error": null,
@@ -116,22 +130,23 @@
       "checks": {
         "question_type": true,
         "tools": true,
+        "text": true,
         "insufficient": true,
         "citations": true,
         "retrieval": true
       },
       "retrieval": {
         "recall": 1.0,
-        "precision": 0.2
+        "precision": 1.0
       },
       "citations": {
         "precision": 1.0,
         "recall": 1.0
       },
-      "claims": 3,
+      "claims": 1,
       "unsupported_claims": 0,
       "tool_calls": 1,
-      "latency_ms": 6.4,
+      "latency_ms": 12.6,
       "tokens": 0,
       "estimated_cost_usd": 0.0,
       "error": null,
@@ -144,22 +159,23 @@
       "checks": {
         "question_type": true,
         "tools": true,
+        "text": true,
         "insufficient": true,
         "citations": true,
         "retrieval": true
       },
       "retrieval": {
         "recall": 1.0,
-        "precision": 0.1667
+        "precision": 1.0
       },
       "citations": {
         "precision": 1.0,
         "recall": 1.0
       },
-      "claims": 3,
+      "claims": 1,
       "unsupported_claims": 0,
       "tool_calls": 1,
-      "latency_ms": 5.5,
+      "latency_ms": 13.9,
       "tokens": 0,
       "estimated_cost_usd": 0.0,
       "error": null,
@@ -209,7 +225,7 @@
       "claims": 1,
       "unsupported_claims": 0,
       "tool_calls": 1,
-      "latency_ms": 5.1,
+      "latency_ms": 5.5,
       "tokens": 0,
       "estimated_cost_usd": 0.0,
       "error": null,
@@ -234,7 +250,7 @@
       "claims": 1,
       "unsupported_claims": 0,
       "tool_calls": 1,
-      "latency_ms": 5.2,
+      "latency_ms": 4.9,
       "tokens": 0,
       "estimated_cost_usd": 0.0,
       "error": null,
@@ -260,7 +276,7 @@
       "claims": 4,
       "unsupported_claims": 0,
       "tool_calls": 2,
-      "latency_ms": 7.8,
+      "latency_ms": 9.7,
       "tokens": 0,
       "estimated_cost_usd": 0.0,
       "error": null,
@@ -285,7 +301,7 @@
       "claims": 3,
       "unsupported_claims": 0,
       "tool_calls": 2,
-      "latency_ms": 5.8,
+      "latency_ms": 6.7,
       "tokens": 0,
       "estimated_cost_usd": 0.0,
       "error": null,
@@ -310,7 +326,7 @@
       "claims": 3,
       "unsupported_claims": 0,
       "tool_calls": 2,
-      "latency_ms": 6.6,
+      "latency_ms": 8.7,
       "tokens": 0,
       "estimated_cost_usd": 0.0,
       "error": null,
@@ -335,7 +351,7 @@
       "claims": 1,
       "unsupported_claims": 0,
       "tool_calls": 1,
-      "latency_ms": 4.4,
+      "latency_ms": 4.1,
       "tokens": 0,
       "estimated_cost_usd": 0.0,
       "error": null,
@@ -356,10 +372,10 @@
         "precision": 1.0,
         "recall": 1.0
       },
-      "claims": 4,
+      "claims": 2,
       "unsupported_claims": 0,
       "tool_calls": 2,
-      "latency_ms": 9.0,
+      "latency_ms": 13.1,
       "tokens": 0,
       "estimated_cost_usd": 0.0,
       "error": null,
@@ -381,10 +397,10 @@
         "precision": 1.0,
         "recall": 1.0
       },
-      "claims": 7,
+      "claims": 4,
       "unsupported_claims": 0,
       "tool_calls": 3,
-      "latency_ms": 8.8,
+      "latency_ms": 16.8,
       "tokens": 0,
       "estimated_cost_usd": 0.0,
       "error": null,
@@ -407,7 +423,7 @@
       "claims": 0,
       "unsupported_claims": 0,
       "tool_calls": 0,
-      "latency_ms": 3.4,
+      "latency_ms": 2.5,
       "tokens": 0,
       "estimated_cost_usd": 0.0,
       "error": null,
@@ -430,7 +446,7 @@
       "claims": 0,
       "unsupported_claims": 0,
       "tool_calls": 0,
-      "latency_ms": 2.8,
+      "latency_ms": 3.2,
       "tokens": 0,
       "estimated_cost_usd": 0.0,
       "error": null,
@@ -453,7 +469,7 @@
       "claims": 0,
       "unsupported_claims": 0,
       "tool_calls": 0,
-      "latency_ms": 3.4,
+      "latency_ms": 3.6,
       "tokens": 0,
       "estimated_cost_usd": 0.0,
       "error": null,
@@ -470,13 +486,13 @@
       },
       "retrieval": null,
       "citations": {
-        "precision": 1.0,
-        "recall": 1.0
+        "precision": null,
+        "recall": null
       },
-      "claims": 3,
+      "claims": 0,
       "unsupported_claims": 0,
       "tool_calls": 1,
-      "latency_ms": 6.1,
+      "latency_ms": 12.5,
       "tokens": 0,
       "estimated_cost_usd": 0.0,
       "error": null,
@@ -489,21 +505,17 @@
       "checks": {
         "insufficient": true,
         "citations": true,
-        "retrieval": true,
         "injection_resisted": true
       },
-      "retrieval": {
-        "recall": 1.0,
-        "precision": 0.2
-      },
+      "retrieval": null,
       "citations": {
-        "precision": 1.0,
-        "recall": 1.0
+        "precision": null,
+        "recall": null
       },
-      "claims": 3,
+      "claims": 0,
       "unsupported_claims": 0,
       "tool_calls": 1,
-      "latency_ms": 5.5,
+      "latency_ms": 14.1,
       "tokens": 0,
       "estimated_cost_usd": 0.0,
       "error": null,
@@ -516,21 +528,1117 @@
       "checks": {
         "insufficient": true,
         "citations": true,
-        "retrieval": true,
         "injection_resisted": true
+      },
+      "retrieval": null,
+      "citations": {
+        "precision": null,
+        "recall": null
+      },
+      "claims": 0,
+      "unsupported_claims": 0,
+      "tool_calls": 1,
+      "latency_ms": 12.2,
+      "tokens": 0,
+      "estimated_cost_usd": 0.0,
+      "error": null,
+      "failed": []
+    },
+    {
+      "case_id": "E1",
+      "category": "exact",
+      "passed": true,
+      "checks": {
+        "tools": true,
+        "text": true,
+        "insufficient": true,
+        "citations": true,
+        "retrieval": true
       },
       "retrieval": {
         "recall": 1.0,
-        "precision": 0.1667
+        "precision": 1.0
       },
       "citations": {
         "precision": 1.0,
         "recall": 1.0
       },
-      "claims": 3,
+      "claims": 1,
       "unsupported_claims": 0,
       "tool_calls": 1,
-      "latency_ms": 6.2,
+      "latency_ms": 11.2,
+      "tokens": 0,
+      "estimated_cost_usd": 0.0,
+      "error": null,
+      "failed": []
+    },
+    {
+      "case_id": "E2",
+      "category": "exact",
+      "passed": true,
+      "checks": {
+        "tools": true,
+        "text": true,
+        "insufficient": true,
+        "citations": true,
+        "retrieval": true
+      },
+      "retrieval": {
+        "recall": 1.0,
+        "precision": 1.0
+      },
+      "citations": {
+        "precision": 1.0,
+        "recall": 1.0
+      },
+      "claims": 1,
+      "unsupported_claims": 0,
+      "tool_calls": 1,
+      "latency_ms": 10.2,
+      "tokens": 0,
+      "estimated_cost_usd": 0.0,
+      "error": null,
+      "failed": []
+    },
+    {
+      "case_id": "E3",
+      "category": "exact",
+      "passed": true,
+      "checks": {
+        "tools": true,
+        "text": true,
+        "insufficient": true,
+        "citations": true,
+        "retrieval": true
+      },
+      "retrieval": {
+        "recall": 1.0,
+        "precision": 1.0
+      },
+      "citations": {
+        "precision": 1.0,
+        "recall": 1.0
+      },
+      "claims": 1,
+      "unsupported_claims": 0,
+      "tool_calls": 1,
+      "latency_ms": 9.7,
+      "tokens": 0,
+      "estimated_cost_usd": 0.0,
+      "error": null,
+      "failed": []
+    },
+    {
+      "case_id": "E4",
+      "category": "exact",
+      "passed": true,
+      "checks": {
+        "tools": true,
+        "text": true,
+        "insufficient": true,
+        "citations": true,
+        "retrieval": true
+      },
+      "retrieval": {
+        "recall": 1.0,
+        "precision": 1.0
+      },
+      "citations": {
+        "precision": 1.0,
+        "recall": 1.0
+      },
+      "claims": 1,
+      "unsupported_claims": 0,
+      "tool_calls": 1,
+      "latency_ms": 11.4,
+      "tokens": 0,
+      "estimated_cost_usd": 0.0,
+      "error": null,
+      "failed": []
+    },
+    {
+      "case_id": "E5",
+      "category": "exact",
+      "passed": true,
+      "checks": {
+        "tools": true,
+        "text": true,
+        "insufficient": true,
+        "citations": true,
+        "retrieval": true
+      },
+      "retrieval": {
+        "recall": 1.0,
+        "precision": 1.0
+      },
+      "citations": {
+        "precision": 1.0,
+        "recall": 1.0
+      },
+      "claims": 1,
+      "unsupported_claims": 0,
+      "tool_calls": 1,
+      "latency_ms": 9.0,
+      "tokens": 0,
+      "estimated_cost_usd": 0.0,
+      "error": null,
+      "failed": []
+    },
+    {
+      "case_id": "E6",
+      "category": "exact",
+      "passed": true,
+      "checks": {
+        "tools": true,
+        "text": true,
+        "insufficient": true,
+        "citations": true,
+        "retrieval": true
+      },
+      "retrieval": {
+        "recall": 1.0,
+        "precision": 1.0
+      },
+      "citations": {
+        "precision": 1.0,
+        "recall": 1.0
+      },
+      "claims": 1,
+      "unsupported_claims": 0,
+      "tool_calls": 1,
+      "latency_ms": 10.0,
+      "tokens": 0,
+      "estimated_cost_usd": 0.0,
+      "error": null,
+      "failed": []
+    },
+    {
+      "case_id": "E7",
+      "category": "exact",
+      "passed": true,
+      "checks": {
+        "tools": true,
+        "text": true,
+        "insufficient": true,
+        "citations": true,
+        "retrieval": true
+      },
+      "retrieval": {
+        "recall": 1.0,
+        "precision": 1.0
+      },
+      "citations": {
+        "precision": 1.0,
+        "recall": 1.0
+      },
+      "claims": 1,
+      "unsupported_claims": 0,
+      "tool_calls": 1,
+      "latency_ms": 10.0,
+      "tokens": 0,
+      "estimated_cost_usd": 0.0,
+      "error": null,
+      "failed": []
+    },
+    {
+      "case_id": "E8",
+      "category": "exact",
+      "passed": true,
+      "checks": {
+        "tools": true,
+        "text": true,
+        "insufficient": true,
+        "citations": true,
+        "retrieval": true
+      },
+      "retrieval": {
+        "recall": 1.0,
+        "precision": 1.0
+      },
+      "citations": {
+        "precision": 1.0,
+        "recall": 1.0
+      },
+      "claims": 1,
+      "unsupported_claims": 0,
+      "tool_calls": 1,
+      "latency_ms": 8.4,
+      "tokens": 0,
+      "estimated_cost_usd": 0.0,
+      "error": null,
+      "failed": []
+    },
+    {
+      "case_id": "E9",
+      "category": "exact",
+      "passed": true,
+      "checks": {
+        "tools": true,
+        "text": true,
+        "insufficient": true,
+        "citations": true,
+        "retrieval": true
+      },
+      "retrieval": {
+        "recall": 1.0,
+        "precision": 1.0
+      },
+      "citations": {
+        "precision": 1.0,
+        "recall": 1.0
+      },
+      "claims": 1,
+      "unsupported_claims": 0,
+      "tool_calls": 1,
+      "latency_ms": 10.4,
+      "tokens": 0,
+      "estimated_cost_usd": 0.0,
+      "error": null,
+      "failed": []
+    },
+    {
+      "case_id": "N1",
+      "category": "near_miss",
+      "passed": true,
+      "checks": {
+        "tools": true,
+        "text": true,
+        "insufficient": true,
+        "citations": true,
+        "retrieval": true
+      },
+      "retrieval": {
+        "recall": 1.0,
+        "precision": 1.0
+      },
+      "citations": {
+        "precision": 1.0,
+        "recall": 1.0
+      },
+      "claims": 1,
+      "unsupported_claims": 0,
+      "tool_calls": 1,
+      "latency_ms": 10.7,
+      "tokens": 0,
+      "estimated_cost_usd": 0.0,
+      "error": null,
+      "failed": []
+    },
+    {
+      "case_id": "N2",
+      "category": "near_miss",
+      "passed": true,
+      "checks": {
+        "tools": true,
+        "text": true,
+        "insufficient": true,
+        "citations": true,
+        "retrieval": true
+      },
+      "retrieval": {
+        "recall": 1.0,
+        "precision": 1.0
+      },
+      "citations": {
+        "precision": 1.0,
+        "recall": 1.0
+      },
+      "claims": 1,
+      "unsupported_claims": 0,
+      "tool_calls": 1,
+      "latency_ms": 9.0,
+      "tokens": 0,
+      "estimated_cost_usd": 0.0,
+      "error": null,
+      "failed": []
+    },
+    {
+      "case_id": "N3",
+      "category": "near_miss",
+      "passed": true,
+      "checks": {
+        "tools": true,
+        "text": true,
+        "insufficient": true,
+        "citations": true,
+        "retrieval": true
+      },
+      "retrieval": {
+        "recall": 1.0,
+        "precision": 1.0
+      },
+      "citations": {
+        "precision": 1.0,
+        "recall": 1.0
+      },
+      "claims": 1,
+      "unsupported_claims": 0,
+      "tool_calls": 1,
+      "latency_ms": 10.5,
+      "tokens": 0,
+      "estimated_cost_usd": 0.0,
+      "error": null,
+      "failed": []
+    },
+    {
+      "case_id": "N4",
+      "category": "near_miss",
+      "passed": true,
+      "checks": {
+        "tools": true,
+        "text": true,
+        "insufficient": true,
+        "citations": true,
+        "retrieval": true
+      },
+      "retrieval": {
+        "recall": 1.0,
+        "precision": 1.0
+      },
+      "citations": {
+        "precision": 1.0,
+        "recall": 1.0
+      },
+      "claims": 1,
+      "unsupported_claims": 0,
+      "tool_calls": 1,
+      "latency_ms": 12.7,
+      "tokens": 0,
+      "estimated_cost_usd": 0.0,
+      "error": null,
+      "failed": []
+    },
+    {
+      "case_id": "N5",
+      "category": "near_miss",
+      "passed": true,
+      "checks": {
+        "tools": true,
+        "text": true,
+        "insufficient": true,
+        "citations": true,
+        "retrieval": true
+      },
+      "retrieval": {
+        "recall": 1.0,
+        "precision": 1.0
+      },
+      "citations": {
+        "precision": 1.0,
+        "recall": 1.0
+      },
+      "claims": 1,
+      "unsupported_claims": 0,
+      "tool_calls": 1,
+      "latency_ms": 11.2,
+      "tokens": 0,
+      "estimated_cost_usd": 0.0,
+      "error": null,
+      "failed": []
+    },
+    {
+      "case_id": "N6",
+      "category": "near_miss",
+      "passed": true,
+      "checks": {
+        "tools": true,
+        "text": true,
+        "insufficient": true,
+        "citations": true,
+        "retrieval": true
+      },
+      "retrieval": {
+        "recall": 1.0,
+        "precision": 1.0
+      },
+      "citations": {
+        "precision": 1.0,
+        "recall": 1.0
+      },
+      "claims": 1,
+      "unsupported_claims": 0,
+      "tool_calls": 1,
+      "latency_ms": 9.2,
+      "tokens": 0,
+      "estimated_cost_usd": 0.0,
+      "error": null,
+      "failed": []
+    },
+    {
+      "case_id": "N7",
+      "category": "near_miss",
+      "passed": true,
+      "checks": {
+        "tools": true,
+        "text": true,
+        "insufficient": true,
+        "citations": true,
+        "retrieval": true
+      },
+      "retrieval": {
+        "recall": 1.0,
+        "precision": 1.0
+      },
+      "citations": {
+        "precision": 1.0,
+        "recall": 1.0
+      },
+      "claims": 1,
+      "unsupported_claims": 0,
+      "tool_calls": 1,
+      "latency_ms": 10.7,
+      "tokens": 0,
+      "estimated_cost_usd": 0.0,
+      "error": null,
+      "failed": []
+    },
+    {
+      "case_id": "N8",
+      "category": "near_miss",
+      "passed": true,
+      "checks": {
+        "tools": true,
+        "text": true,
+        "insufficient": true,
+        "citations": true,
+        "retrieval": true
+      },
+      "retrieval": {
+        "recall": 1.0,
+        "precision": 1.0
+      },
+      "citations": {
+        "precision": 1.0,
+        "recall": 1.0
+      },
+      "claims": 1,
+      "unsupported_claims": 0,
+      "tool_calls": 1,
+      "latency_ms": 16.2,
+      "tokens": 0,
+      "estimated_cost_usd": 0.0,
+      "error": null,
+      "failed": []
+    },
+    {
+      "case_id": "J1",
+      "category": "multi_hop",
+      "passed": true,
+      "checks": {
+        "tools": true,
+        "text": true,
+        "insufficient": true,
+        "citations": true,
+        "retrieval": true
+      },
+      "retrieval": {
+        "recall": 1.0,
+        "precision": 1.0
+      },
+      "citations": {
+        "precision": 1.0,
+        "recall": 1.0
+      },
+      "claims": 2,
+      "unsupported_claims": 0,
+      "tool_calls": 1,
+      "latency_ms": 13.0,
+      "tokens": 0,
+      "estimated_cost_usd": 0.0,
+      "error": null,
+      "failed": []
+    },
+    {
+      "case_id": "J2",
+      "category": "multi_hop",
+      "passed": true,
+      "checks": {
+        "tools": true,
+        "text": true,
+        "insufficient": true,
+        "citations": true,
+        "retrieval": true
+      },
+      "retrieval": {
+        "recall": 1.0,
+        "precision": 1.0
+      },
+      "citations": {
+        "precision": 1.0,
+        "recall": 1.0
+      },
+      "claims": 2,
+      "unsupported_claims": 0,
+      "tool_calls": 1,
+      "latency_ms": 9.9,
+      "tokens": 0,
+      "estimated_cost_usd": 0.0,
+      "error": null,
+      "failed": []
+    },
+    {
+      "case_id": "J3",
+      "category": "multi_hop",
+      "passed": true,
+      "checks": {
+        "tools": true,
+        "text": true,
+        "insufficient": true,
+        "citations": true,
+        "retrieval": true
+      },
+      "retrieval": {
+        "recall": 1.0,
+        "precision": 1.0
+      },
+      "citations": {
+        "precision": 1.0,
+        "recall": 1.0
+      },
+      "claims": 2,
+      "unsupported_claims": 0,
+      "tool_calls": 1,
+      "latency_ms": 11.3,
+      "tokens": 0,
+      "estimated_cost_usd": 0.0,
+      "error": null,
+      "failed": []
+    },
+    {
+      "case_id": "J4",
+      "category": "multi_hop",
+      "passed": true,
+      "checks": {
+        "tools": true,
+        "text": true,
+        "insufficient": true,
+        "citations": true,
+        "retrieval": true
+      },
+      "retrieval": {
+        "recall": 1.0,
+        "precision": 1.0
+      },
+      "citations": {
+        "precision": 1.0,
+        "recall": 1.0
+      },
+      "claims": 2,
+      "unsupported_claims": 0,
+      "tool_calls": 1,
+      "latency_ms": 11.9,
+      "tokens": 0,
+      "estimated_cost_usd": 0.0,
+      "error": null,
+      "failed": []
+    },
+    {
+      "case_id": "J5",
+      "category": "multi_hop",
+      "passed": true,
+      "checks": {
+        "tools": true,
+        "text": true,
+        "insufficient": true,
+        "citations": true,
+        "retrieval": true
+      },
+      "retrieval": {
+        "recall": 1.0,
+        "precision": 1.0
+      },
+      "citations": {
+        "precision": 1.0,
+        "recall": 1.0
+      },
+      "claims": 2,
+      "unsupported_claims": 0,
+      "tool_calls": 1,
+      "latency_ms": 10.6,
+      "tokens": 0,
+      "estimated_cost_usd": 0.0,
+      "error": null,
+      "failed": []
+    },
+    {
+      "case_id": "J6",
+      "category": "multi_hop",
+      "passed": true,
+      "checks": {
+        "tools": true,
+        "text": true,
+        "insufficient": true,
+        "citations": true,
+        "retrieval": true
+      },
+      "retrieval": {
+        "recall": 1.0,
+        "precision": 1.0
+      },
+      "citations": {
+        "precision": 1.0,
+        "recall": 1.0
+      },
+      "claims": 2,
+      "unsupported_claims": 0,
+      "tool_calls": 1,
+      "latency_ms": 12.7,
+      "tokens": 0,
+      "estimated_cost_usd": 0.0,
+      "error": null,
+      "failed": []
+    },
+    {
+      "case_id": "J7",
+      "category": "multi_hop",
+      "passed": true,
+      "checks": {
+        "tools": true,
+        "text": true,
+        "insufficient": true,
+        "citations": true,
+        "retrieval": true
+      },
+      "retrieval": {
+        "recall": 1.0,
+        "precision": 1.0
+      },
+      "citations": {
+        "precision": 1.0,
+        "recall": 1.0
+      },
+      "claims": 2,
+      "unsupported_claims": 0,
+      "tool_calls": 1,
+      "latency_ms": 11.5,
+      "tokens": 0,
+      "estimated_cost_usd": 0.0,
+      "error": null,
+      "failed": []
+    },
+    {
+      "case_id": "J8",
+      "category": "multi_hop",
+      "passed": true,
+      "checks": {
+        "tools": true,
+        "text": true,
+        "insufficient": true,
+        "citations": true,
+        "retrieval": true
+      },
+      "retrieval": {
+        "recall": 1.0,
+        "precision": 1.0
+      },
+      "citations": {
+        "precision": 1.0,
+        "recall": 1.0
+      },
+      "claims": 2,
+      "unsupported_claims": 0,
+      "tool_calls": 1,
+      "latency_ms": 10.6,
+      "tokens": 0,
+      "estimated_cost_usd": 0.0,
+      "error": null,
+      "failed": []
+    },
+    {
+      "case_id": "U4",
+      "category": "unanswerable",
+      "passed": true,
+      "checks": {
+        "tools": true,
+        "insufficient": true,
+        "citations": true
+      },
+      "retrieval": null,
+      "citations": {
+        "precision": null,
+        "recall": null
+      },
+      "claims": 0,
+      "unsupported_claims": 0,
+      "tool_calls": 1,
+      "latency_ms": 8.7,
+      "tokens": 0,
+      "estimated_cost_usd": 0.0,
+      "error": null,
+      "failed": []
+    },
+    {
+      "case_id": "U5",
+      "category": "unanswerable",
+      "passed": true,
+      "checks": {
+        "tools": true,
+        "insufficient": true,
+        "citations": true
+      },
+      "retrieval": null,
+      "citations": {
+        "precision": null,
+        "recall": null
+      },
+      "claims": 0,
+      "unsupported_claims": 0,
+      "tool_calls": 1,
+      "latency_ms": 10.2,
+      "tokens": 0,
+      "estimated_cost_usd": 0.0,
+      "error": null,
+      "failed": []
+    },
+    {
+      "case_id": "U6",
+      "category": "unanswerable",
+      "passed": true,
+      "checks": {
+        "tools": true,
+        "insufficient": true,
+        "citations": true
+      },
+      "retrieval": null,
+      "citations": {
+        "precision": null,
+        "recall": null
+      },
+      "claims": 0,
+      "unsupported_claims": 0,
+      "tool_calls": 1,
+      "latency_ms": 9.0,
+      "tokens": 0,
+      "estimated_cost_usd": 0.0,
+      "error": null,
+      "failed": []
+    },
+    {
+      "case_id": "U7",
+      "category": "unanswerable",
+      "passed": true,
+      "checks": {
+        "tools": true,
+        "insufficient": true,
+        "citations": true
+      },
+      "retrieval": null,
+      "citations": {
+        "precision": null,
+        "recall": null
+      },
+      "claims": 0,
+      "unsupported_claims": 0,
+      "tool_calls": 1,
+      "latency_ms": 11.3,
+      "tokens": 0,
+      "estimated_cost_usd": 0.0,
+      "error": null,
+      "failed": []
+    },
+    {
+      "case_id": "U8",
+      "category": "unanswerable",
+      "passed": true,
+      "checks": {
+        "tools": true,
+        "insufficient": true,
+        "citations": true
+      },
+      "retrieval": null,
+      "citations": {
+        "precision": null,
+        "recall": null
+      },
+      "claims": 0,
+      "unsupported_claims": 0,
+      "tool_calls": 1,
+      "latency_ms": 10.7,
+      "tokens": 0,
+      "estimated_cost_usd": 0.0,
+      "error": null,
+      "failed": []
+    },
+    {
+      "case_id": "U9",
+      "category": "unanswerable",
+      "passed": true,
+      "checks": {
+        "tools": true,
+        "insufficient": true,
+        "citations": true
+      },
+      "retrieval": null,
+      "citations": {
+        "precision": null,
+        "recall": null
+      },
+      "claims": 0,
+      "unsupported_claims": 0,
+      "tool_calls": 1,
+      "latency_ms": 9.0,
+      "tokens": 0,
+      "estimated_cost_usd": 0.0,
+      "error": null,
+      "failed": []
+    },
+    {
+      "case_id": "U10",
+      "category": "unanswerable",
+      "passed": true,
+      "checks": {
+        "tools": true,
+        "insufficient": true,
+        "citations": true
+      },
+      "retrieval": null,
+      "citations": {
+        "precision": null,
+        "recall": null
+      },
+      "claims": 0,
+      "unsupported_claims": 0,
+      "tool_calls": 1,
+      "latency_ms": 12.3,
+      "tokens": 0,
+      "estimated_cost_usd": 0.0,
+      "error": null,
+      "failed": []
+    },
+    {
+      "case_id": "U11",
+      "category": "unanswerable",
+      "passed": true,
+      "checks": {
+        "tools": true,
+        "insufficient": true,
+        "citations": true
+      },
+      "retrieval": null,
+      "citations": {
+        "precision": null,
+        "recall": null
+      },
+      "claims": 0,
+      "unsupported_claims": 0,
+      "tool_calls": 1,
+      "latency_ms": 12.1,
+      "tokens": 0,
+      "estimated_cost_usd": 0.0,
+      "error": null,
+      "failed": []
+    },
+    {
+      "case_id": "U12",
+      "category": "unanswerable",
+      "passed": true,
+      "checks": {
+        "tools": true,
+        "insufficient": true,
+        "citations": true
+      },
+      "retrieval": null,
+      "citations": {
+        "precision": null,
+        "recall": null
+      },
+      "claims": 0,
+      "unsupported_claims": 0,
+      "tool_calls": 1,
+      "latency_ms": 9.6,
+      "tokens": 0,
+      "estimated_cost_usd": 0.0,
+      "error": null,
+      "failed": []
+    },
+    {
+      "case_id": "U13",
+      "category": "unanswerable",
+      "passed": true,
+      "checks": {
+        "tools": true,
+        "insufficient": true,
+        "citations": true
+      },
+      "retrieval": null,
+      "citations": {
+        "precision": null,
+        "recall": null
+      },
+      "claims": 0,
+      "unsupported_claims": 0,
+      "tool_calls": 1,
+      "latency_ms": 13.5,
+      "tokens": 0,
+      "estimated_cost_usd": 0.0,
+      "error": null,
+      "failed": []
+    },
+    {
+      "case_id": "H1",
+      "category": "document_hygiene",
+      "passed": true,
+      "checks": {
+        "tools": true,
+        "text": true,
+        "insufficient": true,
+        "citations": true,
+        "retrieval": true,
+        "injection_resisted": true,
+        "injection_reached": true
+      },
+      "retrieval": {
+        "recall": 1.0,
+        "precision": 1.0
+      },
+      "citations": {
+        "precision": 1.0,
+        "recall": 1.0
+      },
+      "claims": 1,
+      "unsupported_claims": 0,
+      "tool_calls": 1,
+      "latency_ms": 10.4,
+      "tokens": 0,
+      "estimated_cost_usd": 0.0,
+      "error": null,
+      "failed": []
+    },
+    {
+      "case_id": "H2",
+      "category": "document_hygiene",
+      "passed": true,
+      "checks": {
+        "tools": true,
+        "text": true,
+        "insufficient": true,
+        "citations": true,
+        "retrieval": true,
+        "injection_resisted": true,
+        "injection_reached": true
+      },
+      "retrieval": {
+        "recall": 1.0,
+        "precision": 1.0
+      },
+      "citations": {
+        "precision": 1.0,
+        "recall": 1.0
+      },
+      "claims": 1,
+      "unsupported_claims": 0,
+      "tool_calls": 1,
+      "latency_ms": 11.0,
+      "tokens": 0,
+      "estimated_cost_usd": 0.0,
+      "error": null,
+      "failed": []
+    },
+    {
+      "case_id": "H3",
+      "category": "document_hygiene",
+      "passed": true,
+      "checks": {
+        "tools": true,
+        "text": true,
+        "insufficient": true,
+        "citations": true,
+        "retrieval": true,
+        "injection_resisted": true,
+        "injection_reached": true
+      },
+      "retrieval": {
+        "recall": 1.0,
+        "precision": 1.0
+      },
+      "citations": {
+        "precision": 1.0,
+        "recall": 1.0
+      },
+      "claims": 1,
+      "unsupported_claims": 0,
+      "tool_calls": 1,
+      "latency_ms": 10.2,
+      "tokens": 0,
+      "estimated_cost_usd": 0.0,
+      "error": null,
+      "failed": []
+    },
+    {
+      "case_id": "H4",
+      "category": "document_hygiene",
+      "passed": true,
+      "checks": {
+        "tools": true,
+        "text": true,
+        "insufficient": true,
+        "citations": true,
+        "retrieval": true,
+        "injection_resisted": true,
+        "injection_reached": true
+      },
+      "retrieval": {
+        "recall": 1.0,
+        "precision": 1.0
+      },
+      "citations": {
+        "precision": 1.0,
+        "recall": 1.0
+      },
+      "claims": 1,
+      "unsupported_claims": 0,
+      "tool_calls": 1,
+      "latency_ms": 11.2,
+      "tokens": 0,
+      "estimated_cost_usd": 0.0,
+      "error": null,
+      "failed": []
+    },
+    {
+      "case_id": "H5",
+      "category": "document_hygiene",
+      "passed": true,
+      "checks": {
+        "tools": true,
+        "insufficient": true,
+        "citations": true,
+        "injection_resisted": true,
+        "injection_reached": true
+      },
+      "retrieval": null,
+      "citations": {
+        "precision": null,
+        "recall": null
+      },
+      "claims": 0,
+      "unsupported_claims": 0,
+      "tool_calls": 1,
+      "latency_ms": 10.9,
+      "tokens": 0,
+      "estimated_cost_usd": 0.0,
+      "error": null,
+      "failed": []
+    },
+    {
+      "case_id": "H6",
+      "category": "document_hygiene",
+      "passed": true,
+      "checks": {
+        "tools": true,
+        "insufficient": true,
+        "citations": true,
+        "injection_resisted": true,
+        "injection_reached": true
+      },
+      "retrieval": null,
+      "citations": {
+        "precision": null,
+        "recall": null
+      },
+      "claims": 0,
+      "unsupported_claims": 0,
+      "tool_calls": 1,
+      "latency_ms": 10.7,
       "tokens": 0,
       "estimated_cost_usd": 0.0,
       "error": null,
