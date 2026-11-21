@@ -35,12 +35,14 @@ class Evidence(BaseModel):
     location: str  # chunk id / row key / binding summary
     snippet: str | None = None
     confidence: float = 1.0
+    scope: str = Field(default="", exclude=True)
     uri: str | None = None  # RDF subject URI when source_type=rdf
 
 
 class Claim(BaseModel):
     claim: str = Field(min_length=1)
     evidence_ids: list[str] = Field(default_factory=list)
+    supporting_spans: dict[str, str] = Field(default_factory=dict)
     confidence: float | None = None
     unsupported: bool = False  # verifier flags claims lacking real evidence
 
@@ -91,6 +93,7 @@ class SearchHit(BaseModel):
     document_id: str
     score: float
     text: str
+    source_text: str | None = Field(default=None, exclude=True)
     document_title: str | None = None
     entity_ids: list[str] = Field(default_factory=list)
     dense_score: float | None = None

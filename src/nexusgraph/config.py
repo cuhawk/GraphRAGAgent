@@ -55,6 +55,7 @@ class LimitsSettings(BaseModel):
     max_chunk_chars: int = Field(default=800, ge=100)
     max_context_tokens: int = Field(default=2_048, ge=1)
     min_evidence_coverage: float = Field(default=0.50, gt=0, le=1)
+    min_span_coverage: float = Field(default=0.60, gt=0, le=1)
     max_retrieval_chars: int = Field(default=12_000, ge=1)
     tool_timeout_s: float = Field(default=20.0, gt=0)
     sparql_timeout_s: float = Field(default=5.0, gt=0)

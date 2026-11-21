@@ -42,13 +42,14 @@ from nexusgraph.agent.synthesizer import (
     LLMSynthesizer,
     SynthesisRequest,
     ToolOutcome,
-    _strip_bad_markers,
+    _compose_answer,
 )
 from nexusgraph.config import Settings
 from nexusgraph.domain.models import (
     AgentAnswer,
     Claim,
     Entity,
+    Evidence,
     PlanStep,
     QuerySpec,
     QuestionType,
@@ -167,6 +168,7 @@ class AgentOrchestrator:
                     question_type=question_type,
                     outcomes=outcomes,
                     resolved=resolved,
+                    min_span_coverage=self.limits.min_span_coverage,
                 )
                 draft = self._synthesizer.synthesize(request, ledger)
             usage.add(_synthesizer_usage(self._synthesizer))
@@ -179,7 +181,8 @@ class AgentOrchestrator:
                 },
             )
 
-            claims, answer_text = self._verify(draft, ledger)
+            claims, evidence = self._verify(draft, ledger)
+            answer_text = draft.answer if draft.insufficient else _compose_answer(request, claims)
         except Exception as exc:
             trace.finish("error", f"{type(exc).__name__}: {exc}")
             self.runtime.trace_sink.save(trace.record)
@@ -198,7 +201,7 @@ class AgentOrchestrator:
             answer=answer_text,
             question_type=question_type,
             claims=claims,
-            evidence=ledger.items(),
+            evidence=evidence,
             tools_used=tool_runs,
             plan_rationale=plan_rationale,
             trace_id=trace.trace_id,
@@ -421,22 +424,40 @@ class AgentOrchestrator:
         return 1
 
     # ------------------------------------------------------------ citations
-    def _verify(self, draft: AnswerDraft, ledger: EvidenceLedger) -> tuple[list[Claim], str]:
-        known = ledger.ids()
-        verified: list[Claim] = []
-        for claim in draft.claims:
-            valid = [e for e in claim.evidence_ids if e in known]
-            if len(valid) != len(claim.evidence_ids):
-                logger.warning(
-                    "claim dropped %d invalid evidence id(s)", len(claim.evidence_ids) - len(valid)
-                )
-            verified.append(
-                claim.model_copy(
-                    update={"evidence_ids": valid, "unsupported": not valid or claim.unsupported}
-                )
+    def _verify(
+        self, draft: AnswerDraft, ledger: EvidenceLedger
+    ) -> tuple[list[Claim], list[Evidence]]:
+        used = {eid for claim in draft.claims for eid in claim.evidence_ids}
+        items = [item for item in ledger.items() if item.evidence_id in used]
+        ids = {item.evidence_id: f"ev-{i:04d}" for i, item in enumerate(items, 1)}
+        verified = [
+            claim.model_copy(
+                update={
+                    "evidence_ids": [ids[eid] for eid in claim.evidence_ids if eid in ids],
+                    "supporting_spans": {
+                        ids[eid]: span
+                        for eid, span in claim.supporting_spans.items()
+                        if eid in ids and eid in claim.evidence_ids
+                    },
+                }
             )
-        answer = _strip_bad_markers(draft.answer, len(ledger.items()))
-        return verified, answer
+            for claim in draft.claims
+        ]
+        spans_by_id: dict[str, list[str]] = {}
+        for claim in verified:
+            for eid, span in claim.supporting_spans.items():
+                spans_by_id.setdefault(eid, []).append(span)
+        evidence = []
+        for item in items:
+            new_id = ids[item.evidence_id]
+            spans = spans_by_id.get(new_id)
+            snippet = (
+                "\n\n".join(dict.fromkeys(spans))
+                if item.source_type == SourceType.document and spans
+                else item.snippet
+            )
+            evidence.append(item.model_copy(update={"evidence_id": new_id, "snippet": snippet}))
+        return verified, evidence
 
 
 def _planner_usage(planner: object) -> Usage:

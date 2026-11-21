@@ -261,16 +261,23 @@ whole passages with `[doc:section:line]` citations and abstains when no
 passage clears the evidence threshold and fits the budget. Context tokens
 are counted with an offline word-and-punctuation tokenizer.
 
-The ablation uses the seed-42 synthetic corpus and hash embeddings. Ranking
-metrics use unique document IDs. Citation precision and refusal accuracy
-measure the retrieval output. See the [ablation methodology](benchmarks/RESULTS.md)
-and [full agent evaluation report](evals/results/report.md).
+The 60-query offline suite covers cross-record evidence, exact codes and
+table cells, near misses, missing answers, and retrieved-document directives.
+Ranking metrics use unique document IDs on queries with relevance labels.
 
-| Configuration | MRR@10 | Recall@5 | NDCG@10 | Citation precision | Refusal accuracy |
-| --- | ---: | ---: | ---: | ---: | ---: |
-| Dense-only | 1.0000 | 1.0000 | 1.0000 | 0.4375 | 0.3333 |
-| Hybrid RRF | 1.0000 | 1.0000 | 1.0000 | 0.4375 | 0.3333 |
-| Hybrid RRF + Reranker | 1.0000 | 1.0000 | 1.0000 | 0.4375 | 0.3333 |
+| Configuration | Queries | MRR@10 | Recall@5 | NDCG@10 |
+| --- | ---: | ---: | ---: | ---: |
+| Dense-only | 33 | 0.8687 | 1.0000 | 0.8919 |
+| Hybrid RRF | 33 | 0.9242 | 1.0000 | 0.9368 |
+| Hybrid RRF + Reranker | 33 | 0.9848 | 1.0000 | 0.9888 |
+
+On the same corpus, 42 of 66 packed passages were relevant (0.6364), and
+the packer abstained on 9 of 13 unanswerable questions (0.6923). The reranked
+agent emitted 41 valid document citations out of 41, refused all 13
+unanswerable questions, answered all 33 labeled answerable document questions,
+and passed all 6 document hygiene cases. These are synthetic development
+measurements with hash embeddings and mock synthesis.
+[Ablation report](benchmarks/RESULTS.md) · [Full agent evaluation](evals/results/report.md)
 
 ## Development
 

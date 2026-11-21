@@ -22,13 +22,15 @@ import sys
 import time
 from datetime import UTC, datetime
 from pathlib import Path
+from tempfile import TemporaryDirectory
 from typing import Any
 
 from evals.cases import CASES, CATEGORIES, EvalCase
-from evals.graders import CaseResult, grade, grade_error
-from nexusgraph.config import get_settings
+from evals.graders import CaseResult, directive_reached, grade, grade_error
+from evals.runtime import diagnostic_runtime
+from nexusgraph.agent.orchestrator import AgentOrchestrator
 from nexusgraph.observability.logging import configure_logging, get_logger
-from nexusgraph.runtime import ensure_bootstrapped
+from nexusgraph.runtime import Runtime
 
 logger = get_logger("evals")
 
@@ -49,12 +51,19 @@ def _git_rev() -> str | None:
 
 
 def run_suite(cases: list[EvalCase], out_dir: Path) -> dict[str, Any]:
-    from nexusgraph.agent.orchestrator import AgentOrchestrator
+    with TemporaryDirectory(prefix="nexusgraph-evals-") as tmpdir:
+        runtime = diagnostic_runtime(Path(tmpdir))
+        try:
+            return _run(cases, out_dir, runtime, AgentOrchestrator(runtime))
+        finally:
+            runtime.engine.dispose()
 
-    settings = get_settings()
+
+def _run(
+    cases: list[EvalCase], out_dir: Path, runtime: Runtime, orchestrator: AgentOrchestrator
+) -> dict[str, Any]:
+    settings = runtime.settings
     configure_logging(settings.log_level, settings.log_json)
-    runtime, _ = ensure_bootstrapped(settings)
-    orchestrator = AgentOrchestrator(runtime)
     provider = settings.llm.provider
     model = settings.llm.model
 
@@ -64,7 +73,16 @@ def run_suite(cases: list[EvalCase], out_dir: Path) -> dict[str, Any]:
         started = time.perf_counter()
         try:
             answer = orchestrator.run(case.question)
-            result = grade(case, answer)
+            reached_fixture = None
+            if case.expected.injection_document_id:
+                candidates = runtime.retrieval.pack(
+                    runtime.retrieval.rank(
+                        case.question, depth=max(40, runtime.limits.retrieval_k * 4)
+                    ),
+                    k=runtime.limits.retrieval_k,
+                )
+                reached_fixture = directive_reached(case, candidates.hits)
+            result = grade(case, answer, injection_reached=reached_fixture)
         except Exception as exc:  # noqa: BLE001 - a crashing case is a result
             result = grade_error(case, exc)
             logger.error("case %s crashed: %s", case.id, exc)
@@ -171,7 +189,7 @@ def render_markdown(payload: dict[str, Any], cases: list[EvalCase]) -> str:
         "",
         f"- Generated: {payload['generated_at']}",
         f"- Provider/model: `{payload['provider']}` / `{payload['model']}`",
-        f"- Dataset seed: {payload['dataset_seed']} (synthetic corpus)",
+        f"- Dataset seed: {payload['dataset_seed']} (synthetic corpus + diagnostic records)",
         f"- Git revision: {payload['git_rev'] or 'unknown'}",
         "- Grading: deterministic only (see docs/EVALS.md)",
         "",
@@ -229,7 +247,8 @@ def render_markdown(payload: dict[str, Any], cases: list[EvalCase]) -> str:
         "- Answers were produced by the full agent pipeline (planner -> "
         "guarded tools -> evidence ledger -> synthesizer -> citation check).",
         "- Graders are deterministic: no LLM judged any answer.",
-        "- Expected ids derive from the synthetic corpus manifest (seed 42); see evals/cases.py.",
+        "- Expected sources and answer anchors are specified in evals/cases.py "
+        "and evals/diagnostic.py.",
         "- Token/cost figures are the run's own accounting; in `mock` "
         "provider mode there are no LLM calls on the answer path.",
         "",
