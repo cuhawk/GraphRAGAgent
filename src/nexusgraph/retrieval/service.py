@@ -38,11 +38,14 @@ class RetrievalService:
         vector_index: VectorIndex,
         embedder: Embedder,
         limits: LimitsSettings,
+        *,
+        default_mode: RetrievalMode = "rerank",
     ) -> None:
         self._documents = document_store
         self._index = vector_index
         self._embedder = embedder
         self._limits = limits
+        self._default_mode = default_mode
 
     def rank(
         self,
@@ -84,6 +87,7 @@ class RetrievalService:
                     document_id=chunk.document_id,
                     score=scores[chunk.id],
                     text=text,
+                    source_text=chunk.text,
                     entity_ids=chunk.entity_ids,
                     dense_score=dense_scores.get(chunk.id),
                     lexical_score=lexical_scores.get(chunk.id),
@@ -97,7 +101,12 @@ class RetrievalService:
         hits.sort(key=lambda hit: (-hit.score, hit.chunk_id))
         hits = hits[:depth]
         if mode == "rerank":
-            hits.sort(key=lambda hit: (-(hit.reranker_score or 0.0), -hit.score, hit.chunk_id))
+            hits.sort(
+                key=lambda hit: (
+                    -(0.8 * (hit.reranker_score or 0.0) + 0.2 * hit.score / (2 / (RRF_K + 1))),
+                    hit.chunk_id,
+                )
+            )
         return hits
 
     def pack(self, hits: list[SearchHit], *, k: int) -> PackedContext:
@@ -124,7 +133,10 @@ class RetrievalService:
             content_types=tuple(content_types or ()),
             entity_ids=tuple(entity_ids or ()),
         )
-        packed = self.pack(self.rank(query, depth=max(40, k * 4), filters=filters), k=k)
+        packed = self.pack(
+            self.rank(query, depth=max(40, k * 4), filters=filters, mode=self._default_mode),
+            k=k,
+        )
         titles = {doc.id: doc.title for doc in self._documents.list_documents(limit=10_000)}
         return [
             hit.model_copy(update={"document_title": titles.get(hit.document_id)})

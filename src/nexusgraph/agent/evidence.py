@@ -9,6 +9,8 @@ are structurally impossible.
 from __future__ import annotations
 
 import json
+import re
+import unicodedata
 
 from nexusgraph.domain.models import (
     DocumentDetail,
@@ -19,6 +21,98 @@ from nexusgraph.domain.models import (
     SparqlResult,
     StructuredQueryResult,
 )
+from nexusgraph.retrieval.context import content_terms, interaction
+
+# Filter whole paragraphs so a wrapped directive cannot leave its payload behind.
+_PARAGRAPH_BREAK = re.compile(r"\n[ \t]*\n")
+_SENTENCE_BREAK = re.compile(r"(?<=[.!?])\s+(?=[A-Z])")
+_INSTRUCTION = re.compile(
+    r"ignore (?:all |any |your |the )?(?:previous|prior|operating|system|developer)|"
+    r"system directive|(?:highest priority|instruction) override|"
+    r"(?:hidden )?directive for automated readers|(?:if you are|as) an? (?:ai|assistant)|"
+    r"(?:reply|respond|answer|output|print) (?:with )?(?:exactly|only)|"
+    r"(?:do not|never) (?:comply|cite|mention)|"
+    r"\[(?:/?inst|/?system)\]|<\|(?:im_start|system|assistant)\|>|"
+    r"^(?:system|assistant|developer)\s*:",
+    re.IGNORECASE | re.MULTILINE,
+)
+_QUERY_FILLER = frozenset(
+    [
+        "document",
+        "documents",
+        "report",
+        "reports",
+        "say",
+        "states",
+        "happened",
+        "show",
+        "tell",
+        "listed",
+        "recorded",
+        "note",
+        "register",
+        "handbook",
+        "bulletin",
+    ]
+)
+
+
+def sanitize_document(text: str) -> str:
+    safe = []
+    for paragraph in _PARAGRAPH_BREAK.split(text):
+        normalized = unicodedata.normalize("NFKC", paragraph)
+        normalized = "".join(c for c in normalized if unicodedata.category(c) != "Cf")
+        flattened = re.sub(r"\s+", " ", normalized).strip()
+        if flattened and not (_INSTRUCTION.search(normalized) or _INSTRUCTION.search(flattened)):
+            safe.append(paragraph.strip())
+    return "\n\n".join(safe)
+
+
+def document_spans(text: str) -> list[tuple[str, str]]:
+    """Return verbatim sentences or intact table rows from sanitized text."""
+    spans: list[tuple[str, str]] = []
+    for paragraph in _PARAGRAPH_BREAK.split(text):
+        rows = [line.strip() for line in paragraph.splitlines() if line.lstrip().startswith("|")]
+        if len(rows) > 2 and re.fullmatch(r"[| :\-]+", rows[1]):
+            spans.extend((row, rows[0]) for row in rows[2:])
+        else:
+            spans.extend((part.strip(), "") for part in _SENTENCE_BREAK.split(paragraph))
+    return [(span, header) for span, header in spans if any(c.isalnum() for c in span)]
+
+
+def query_span_score(
+    question: str, span: str, minimum: float, *, header: str = "", scope: str = ""
+) -> float:
+    terms = content_terms(question) - _QUERY_FILLER
+    span_terms = content_terms(span)
+    found = content_terms(header) | span_terms
+    identifiers = {term for term in terms if any(c.isdigit() for c in term)}
+    scope_terms = content_terms(scope) if not header else set()
+    if identifiers and identifiers <= scope_terms and terms - scope_terms:
+        # A title can establish the record being discussed. Require the passage
+        # itself to cover the requested information outside that title.
+        terms -= scope_terms
+    if (
+        not terms
+        or not identifiers <= span_terms | scope_terms
+        or sum(term in found or term + "s" in found for term in terms) < min(2, len(terms))
+    ):
+        return 0.0
+    if not identifiers and len(terms) >= 5:
+        minimum = max(minimum, 0.85)
+    similarity, coverage = interaction(" ".join(sorted(terms)), f"{header} {span}")
+    if coverage < minimum:
+        return 0.0
+    if header and "register" in content_terms(question):
+        similarity += 0.15
+    return similarity
+
+
+def claim_matches_span(claim: str, span: str) -> bool:
+    phrase = " ".join(claim.casefold().split()).rstrip(".")
+    source = " ".join(span.casefold().split()).rstrip(".")
+    return bool(phrase and phrase == source)
+
 
 _DATA_BASE = "https://nexusgraph.dev/data/"
 MAX_EVIDENCE_PER_TOOL = 10
@@ -77,6 +171,7 @@ class EvidenceLedger:
         snippet: str | None = None,
         uri: str | None = None,
         confidence: float = 1.0,
+        scope: str = "",
         snippet_limit: int | None = SNIPPET_CHARS,
     ) -> Evidence | None:
         key = (source_id, location)
@@ -91,6 +186,7 @@ class EvidenceLedger:
             snippet=(snippet[:snippet_limit] if snippet else None),
             uri=uri,
             confidence=confidence,
+            scope=scope,
         )
         self._items.append(evidence)
         return evidence
@@ -99,12 +195,18 @@ class EvidenceLedger:
     def add_search_hits(self, hits: list[SearchHit]) -> list[Evidence]:
         added = []
         for hit in hits:
+            snippet = sanitize_document(
+                hit.source_text if hit.source_text is not None else hit.text
+            )
+            if not snippet:
+                continue
             evidence = self._add(
                 source_id=hit.document_id,
                 source_type=SourceType.document,
                 location=hit.citation or hit.chunk_id,
-                snippet=hit.text,
+                snippet=snippet,
                 snippet_limit=None,
+                scope=sanitize_document(hit.document_title or ""),
             )
             if evidence:
                 added.append(evidence)
@@ -140,11 +242,16 @@ class EvidenceLedger:
         return [e for e in added if e]
 
     def add_document(self, detail: DocumentDetail) -> Evidence | None:
+        snippet = sanitize_document(detail.document.text)
+        if not snippet:
+            return None
         return self._add(
             source_id=detail.document.id,
             source_type=SourceType.document,
             location="document",
-            snippet=detail.document.text[:SNIPPET_CHARS] or detail.document.title,
+            snippet=snippet,
+            snippet_limit=None,
+            scope=sanitize_document(detail.document.title),
         )
 
     def add_entity(self, detail: EntityDetail) -> Evidence | None:

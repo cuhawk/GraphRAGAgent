@@ -1,13 +1,12 @@
 # Evaluations
 
-How NexusGraph is measured. The guiding rule: **every published number comes
-from an executed run recorded in `evals/results/`**; anything not measured is
-labelled as such rather than estimated.
+The agent report and the retrieval ablation publish results from executed runs.
+The ablation report is in `benchmarks/RESULTS.md`.
 
 ## Running
 
 ```bash
-uv run python -m evals.run                 # full suite (19 cases)
+uv run python -m evals.run                 # full diagnostic suite
 uv run python -m evals.run --cases R1,S1   # subset by id
 uv run python -m evals.run --limit 5       # first N cases
 ```
@@ -26,15 +25,17 @@ Outputs (written to `evals/results/`):
 | `retrieval` | R1–R4 | hybrid retrieval surfaces the right documents (MD, TXT, JSON, PDF) |
 | `graph` | G1–G3 | SPARQL traversal & entity lookup return the scenario facts |
 | `sql` | S1–S3 | typed SQL answers trend/count questions with the documented directions |
-| `multi_hop` | M1–M2 | 4-hop product traversal; trial → compounds → mention graphs |
+| `multi_hop` | M1–M2, J1–J8 | Graph traversal and evidence joined across operational records |
 | `mixed` | X1 | one question answered across graph + SQL with cross-source linking |
-| `unanswerable` | U1–U3 | the agent refuses (no claims) instead of guessing |
-| `adversarial` | A1–A3 | prompt-injection/exfiltration directives are never echoed unquoted; grounded claims still cite |
+| `unanswerable` | U1–U13 | Refusal for absent entities, missing fields, and out-of-domain questions |
+| `adversarial` | A1–A3 | Direct user instructions to repeat fixture payloads |
+| `exact` | E1–E9 | Identifier, code, and table-cell lookups |
+| `near_miss` | N1–N8 | Relevant passages among similar operational records |
+| `document_hygiene` | H1–H6 | Retrieved directives and clean factual spans |
 
-Expectations are machine-checkable and derive from the corpus itself:
-`data/dataset/manifest.json` `expected_facts` (scenario engineering at seed 42)
-and the per-document mention graph. Case definitions live in
-`evals/cases.py`, each with its rationale in a `notes` field.
+The runner builds a fresh offline database with the seed-42 corpus and
+the operational packet in `evals/diagnostic.py`. The cases specify expected
+tools, sources, answer anchors, and refusal behavior.
 
 ## Grading
 
@@ -46,19 +47,15 @@ are reproducible:
 - **Tool selection** — every expected tool was actually used.
 - **Answer content** — expected entity/document ids and keywords appear in the
   answer + claim texts.
-- **Retrieval recall / precision** — over the case's `expected_document_ids`
-  and the documents present in evidence. Recall 1.0 means every expected
-  document was surfaced; precision counts retrieved documents that were
-  expected (with k=6 retrieval and 1–2 expected docs, precision is
-  structurally low — read it together with recall).
-- **Citation precision / recall** — precision: claims citing only ledger-valid
-  evidence ids; recall: claims citing at least one evidence item. By
-  construction the orchestrator re-validates both, so the metric verifies the
-  machinery end-to-end rather than a hope.
-- **Unsupported-claim rate** — claims citing nothing.
-- **Injection resistance** — each forbidden string must be absent from the
-  answer/claims, *except* when it appears inside a claim that cites evidence
-  whose snippet contains the same string (i.e. honest quotation).
+- **Evidence recall / precision** measure expected documents represented in
+  the final answer's evidence. The ablation separately measures raw ranking.
+- **Citation precision / recall** measure valid claim-to-source links and
+  supported claims. Document citations require a verbatim span and any authored
+  source-specific answer anchors. The ablation also checks the stored chunk.
+- **Unsupported-claim rate** counts claims without valid support.
+- **Injection resistance** checks canary absence in the answer, claims, and
+  evidence. Document-hygiene cases also verify that the directive was retrieved
+  into the candidate context.
 - **Latency / tokens / cost** — from the recorded run's own accounting.
 
 A case passes only if every applicable check passes. The run-level success
@@ -66,22 +63,8 @@ rate is the fraction of passed cases.
 
 ## Measured results
 
-The committed `evals/results/latest.json` + `report.md` hold the current
-measured state; the README table is copied from it. The committed run used:
-
-- provider `mock` (the fully deterministic path — heuristic planner +
-  rule-based synthesizer, zero LLM calls),
-- the synthetic corpus at seed 42, local profile,
-- 19 cases, deterministic grading.
-
-**Not yet measured** (and therefore never claimed anywhere in this repo):
-
-- answers from a real LLM provider (`openai-compatible`) — planner and
-  synthesizer quality with a real model;
-- semantic-embedding quality (the committed run uses the deterministic hash
-  embedder);
-- any production workload, real corpus, or multi-user behaviour.
-
-Plug in a provider via `NEXUSGRAPH_LLM_PROVIDER=openai-compatible` +
-`NEXUSGRAPH_LLM_BASE_URL`/`API_KEY` and re-run `python -m evals.run` to
-produce those numbers — the report will then carry them with full provenance.
+The latest run is recorded in `evals/results/latest.json` and
+`evals/results/report.md`. Both the diagnostic suite and the ablation run
+the local mock planner and synthesizer with hash embeddings. The measurements
+describe this synthetic development corpus. Live model providers, semantic
+embeddings, and production workloads require separate evaluation.

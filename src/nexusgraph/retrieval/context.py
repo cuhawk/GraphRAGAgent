@@ -71,10 +71,14 @@ def _trigrams(term: str) -> frozenset[str]:
     return frozenset(padded[i : i + 3] for i in range(len(term)))
 
 
+def content_terms(text: str) -> set[str]:
+    return set(tokenize(text)) - _STOP_WORDS
+
+
 def interaction(query: str, text: str) -> tuple[float, float]:
     """MaxSim-style token interaction with exact matching for technical identifiers."""
-    query_terms = set(tokenize(query)) - _STOP_WORDS
-    terms = set(tokenize(text)) - _STOP_WORDS
+    query_terms = content_terms(query)
+    terms = content_terms(text)
     technical = {term for term in query_terms if any(char.isdigit() for char in term)}
     if not query_terms:
         return 0.0, 0.0
@@ -96,8 +100,10 @@ def interaction(query: str, text: str) -> tuple[float, float]:
     similarities = [similarity(term) for term in sorted(query_terms)]
     score = sum(similarities) / len(similarities)
     coverage = sum(value >= 0.60 for value in similarities) / len(similarities)
-    if technical and not technical.intersection(terms):
-        coverage = 0.0
+    if technical and not technical <= terms:
+        score *= 0.5
+        if not technical & terms:
+            coverage = 0.0
     return score, coverage
 
 
